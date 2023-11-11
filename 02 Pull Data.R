@@ -20,7 +20,6 @@ if(file.exists('keys.R') == F){
 }
 
 for(i in 1:nrow(to_pull)){
-  
   tempfile_15 <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
   save_object(object = paste0("s3://crypto-data-shiny/",
                               to_pull$aws_file_name[i]), file = tempfile_15)
@@ -67,5 +66,6 @@ for(i in 1:nrow(to_pull)){
   
   unlink(to_pull$aws_file_name[i])
   
+  print(paste0("i: ", i, "symbol: ", to_pull$from_symbol[i], " complete"))
 }
 
