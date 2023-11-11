@@ -26,8 +26,8 @@ if(file.exists('keys.R') == F){
 for(i in 1:nrow(to_pull)){
   tempfile_15 <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
   
-  print(paste0("Starting: ", obj))
   obj =  paste0("s3://crypto-data-shiny/", to_pull$aws_file_name[i])
+  print(paste0("Starting: ", obj))
   
   save_object(object = obj, file = tempfile_15)
   print(paste0("Saved: ", obj))
