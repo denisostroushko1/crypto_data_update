@@ -4,6 +4,21 @@ source("Master Functions.R")
 
 source('01 parameters for api.R')
 
+if(file.exists('keys.R') == T){
+  source("keys.R")
+  
+  Sys.setenv("AWS_ACCESS_KEY_ID" = access_key,
+             "AWS_SECRET_ACCESS_KEY" = secret_key, 
+             "AWS_DEFAULT_REGION" =  aws_region)
+}
+
+if(file.exists('keys.R') == F){
+        Sys.setenv("AWS_ACCESS_KEY_ID" = Sys.getenv("access_key"),
+                   "AWS_SECRET_ACCESS_KEY" = Sys.getenv("secret_key"), 
+                   "AWS_DEFAULT_REGION" =  Sys.getenv("aws_region"))
+    
+}
+
 for(i in 1:nrow(to_pull)){
   
   tempfile_15 <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
@@ -40,10 +55,16 @@ for(i in 1:nrow(to_pull)){
   
   write.csv(all_new, to_pull$aws_file_name[i])
   
-  put_object(file = to_pull$aws_file_name[i], 
-           object = to_pull$aws_file_name[i],
-           bucket = bucket_name)   
-
+  if(file.exists('keys.R') == F){
+    put_object(file = to_pull$aws_file_name[i], 
+               object = to_pull$aws_file_name[i],
+               bucket = Sys.getenv("bucket_name"))
+  }else{
+    put_object(file = to_pull$aws_file_name[i], 
+               object = to_pull$aws_file_name[i],
+               bucket = bucket_name)   
+  }
+  
   unlink(to_pull$aws_file_name[i])
   
 }
