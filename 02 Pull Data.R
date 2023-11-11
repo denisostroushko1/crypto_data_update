@@ -10,19 +10,27 @@ if(file.exists('keys.R') == T){
   Sys.setenv("AWS_ACCESS_KEY_ID" = access_key,
              "AWS_SECRET_ACCESS_KEY" = secret_key, 
              "AWS_DEFAULT_REGION" =  aws_region)
+  
+  print("Connected to AWS using local keys")
 }
 
 if(file.exists('keys.R') == F){
         Sys.setenv("AWS_ACCESS_KEY_ID" = Sys.getenv("access_key"),
                    "AWS_SECRET_ACCESS_KEY" = Sys.getenv("secret_key"), 
                    "AWS_DEFAULT_REGION" =  Sys.getenv("aws_region"))
+  
+  print("Connected to AWS using secret keys")
     
 }
 
 for(i in 1:nrow(to_pull)){
   tempfile_15 <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
-  save_object(object = paste0("s3://crypto-data-shiny/",
-                              to_pull$aws_file_name[i]), file = tempfile_15)
+  
+  obj =  paste0("s3://crypto-data-shiny/", to_pull$aws_file_name[i])
+  print(paste0("Getting: ", obj))
+  
+  save_object(object = obj, file = tempfile_15)
+  
   df <- read.csv(tempfile_15)
   df$datetime <- as.Date(df$datetime)
   
@@ -66,6 +74,6 @@ for(i in 1:nrow(to_pull)){
   
   unlink(to_pull$aws_file_name[i])
   
-  print(paste0("i: ", i, "symbol: ", to_pull$from_symbol[i], " complete"))
+  print(paste0("i: ", i, "; symbol: ", to_pull$from_symbol[i], " complete"))
 }
 
