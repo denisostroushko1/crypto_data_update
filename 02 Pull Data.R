@@ -7,7 +7,7 @@ source('01 parameters for api.R')
 if(file.exists('keys.R') == T){
   source("keys.R")
   
-  Sys.setenv("AWS_ACCESS_KEY_ID" = access_key,
+  Sys.setenv("AWS_ACCESS_KEY_ID" = ccess_key,
              "AWS_SECRET_ACCESS_KEY" = secret_key, 
              "AWS_DEFAULT_REGION" =  aws_region)
   
@@ -26,8 +26,8 @@ if(file.exists('keys.R') == F){
 for(i in 1:nrow(to_pull)){
   tempfile_15 <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
   
+  print(paste0("Starting: ", obj))
   obj =  paste0("s3://crypto-data-shiny/", to_pull$aws_file_name[i])
-  print(paste0("Getting: ", obj))
   
   save_object(object = obj, file = tempfile_15)
   print(paste0("Saved: ", obj))
