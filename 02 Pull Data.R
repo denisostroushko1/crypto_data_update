@@ -30,8 +30,11 @@ for(i in 1:nrow(to_pull)){
   print(paste0("Getting: ", obj))
   
   save_object(object = obj, file = tempfile_15)
+  print(paste0("Saved: ", obj))
   
   df <- read.csv(tempfile_15)
+  print(paste0("Read to CSV: ", obj))
+  
   df$datetime <- as.Date(df$datetime)
   
   df <- df %>% select(-X)
