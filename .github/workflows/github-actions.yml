@@ -1,0 +1,49 @@
+on:
+  schedule:
+    - cron:  '0 10 * * *' # every day at midnight
+  push:
+    branches: main
+  workflow_dispatch:
+
+name: Update and Upload Crypto data 
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    
+    permissions:
+        contents: write
+        
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+        
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.3.1' # The R version to download (if necessary) and use.
+
+      - name: Install packages
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+            packages:
+              any::tidyverse 
+              any::lubridate 
+              any::aws.s3 
+              any::httr
+              
+      - name: Execute R Script
+        env:
+            access_key: ${{ secrets.ACCESS_KEY }}
+            secret_key: ${{ secrets.SECRET_KEY }}
+            aws_region: ${{ secrets.REGION }}
+            bucket_name: ${{secrets.BUCKET_NAME}}
+            
+        run: |
+            Rscript 02\ Pull\ Data.R
+          
+      - name: Setup git config
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+          
