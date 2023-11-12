@@ -38,17 +38,14 @@ jobs:
               
       - name: Execute R Script
         env:
-          ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}    
+            access_key: ${{ secrets.ACCESS_KEY }}
+            secret_key: ${{ secrets.SECRET_KEY }}
+            aws_region: ${{ secrets.REGION }}
+            bucket_name: ${{secrets.BUCKET_NAME}}
+            
         run: |
-          cat("AWS_ACCESS_KEY_ID:", Sys.getenv("ACCESS_KEY"), "\n")
-          cat("BUCKET_NAME:", Sys.getenv("AWS_REGION"), "\n")
-          cat("BUCKET_NAME:", Sys.getenv("BUCKET_NAME"), "\n")
-          cat("AWS_SECRET_ACCESS_KEY:", Sys.getenv("SECRET_KEY"), "\n")
-       # run: |
-       #     Rscript 02\ Pull\ Data.R
+            Rscript 02\ Pull\ Data.R
+          
       - name: Setup git config
         run: |
           git config user.name "GitHub Actions Bot"
