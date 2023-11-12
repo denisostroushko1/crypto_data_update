@@ -4,10 +4,12 @@ source("Master Functions.R")
 
 source('01 parameters for api.R')
 
+if(1 == 2){
+
 if(file.exists('keys.R') == T){
   source("keys.R")
   
-  Sys.setenv("AWS_ACCESS_KEY_ID" = ccess_key,
+  Sys.setenv("AWS_ACCESS_KEY_ID" = access_key,
              "AWS_SECRET_ACCESS_KEY" = secret_key, 
              "AWS_DEFAULT_REGION" =  aws_region)
   
@@ -30,10 +32,11 @@ for(i in 1:nrow(to_pull)){
   print(paste0("Starting: ", obj))
   
   save_object(object = obj, file = tempfile_15)
+  
   print(paste0("Saved: ", obj))
   
   df <- read.csv(tempfile_15)
-  print(paste0("Read to CSV: ", obj))
+  print(paste0("Read to  CSV: ", obj))
   
   df$datetime <- as.Date(df$datetime)
   
@@ -80,3 +83,4 @@ for(i in 1:nrow(to_pull)){
   print(paste0("i: ", i, "; symbol: ", to_pull$from_symbol[i], " complete"))
 }
 
+}
