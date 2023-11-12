@@ -37,17 +37,16 @@ jobs:
               any::secret
               
       - name: Execute R Script
-        env:
-            access_key: ${{ secrets.ACCESS_KEY }}
-            secret_key: ${{ secrets.SECRET_KEY }}
-            aws_region: ${{ secrets.REGION }}
-            bucket_name: ${{secrets.BUCKET_NAME}}
-      - name: Debug
         run: |
-          echo "AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}"
-          echo "AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_KEY }}"
-          echo "AWS_REGION: ${{ secrets.REGION }}"
-          echo "AWS_BUCKET_NAME: ${{ secrets.BUCKET_NAME }}"
+          cat("AWS_ACCESS_KEY_ID:", Sys.getenv("ACCESS_KEY"), "\n")
+          cat("BUCKET_NAME:", Sys.getenv("AWS_REGION"), "\n")
+          cat("BUCKET_NAME:", Sys.getenv("BUCKET_NAME"), "\n")
+          cat("AWS_SECRET_ACCESS_KEY:", Sys.getenv("SECRET_KEY"), "\n")
+        env:
+          ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
       # Add the rest of your workflow steps here
       
        # run: |
