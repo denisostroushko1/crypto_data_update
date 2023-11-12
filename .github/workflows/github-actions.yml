@@ -42,9 +42,16 @@ jobs:
             secret_key: ${{ secrets.SECRET_KEY }}
             aws_region: ${{ secrets.REGION }}
             bucket_name: ${{secrets.BUCKET_NAME}}
-            
+      - name: Debug
         run: |
-            Rscript 02\ Pull\ Data.R
+          echo "AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}"
+          echo "AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_KEY }}"
+          echo "AWS_REGION: ${{ secrets.REGION }}"
+          echo "AWS_BUCKET_NAME: ${{ secrets.BUCKET_NAME }}"
+      # Add the rest of your workflow steps here
+      
+       # run: |
+       #     Rscript 02\ Pull\ Data.R
           
       - name: Setup git config
         run: |
