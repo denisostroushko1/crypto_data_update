@@ -16,6 +16,11 @@ if(file.exists('keys.R') == T){
 }
 
 if(file.exists('keys.R') == F){
+  
+  print(Sys.getenv("ACCESS_KEY"))
+  print(Sys.getenv("SECRET_KEY"))
+  print(Sys.getenv("AWS_REGION"))
+  
         Sys.setenv("AWS_ACCESS_KEY_ID" = Sys.getenv("ACCESS_KEY"),
                    "AWS_SECRET_ACCESS_KEY" = Sys.getenv("SECRET_KEY"), 
                    "AWS_DEFAULT_REGION" =  Sys.getenv("AWS_REGION"))
