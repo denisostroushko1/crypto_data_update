@@ -4,8 +4,6 @@ source("Master Functions.R")
 
 source('01 parameters for api.R')
 
-if(1 == 2){
-
 if(file.exists('keys.R') == T){
   source("keys.R")
   
@@ -84,4 +82,3 @@ for(i in 1:nrow(to_pull)){
   print(paste0("i: ", i, "; symbol: ", to_pull$from_symbol[i], " complete"))
 }
 
-}
