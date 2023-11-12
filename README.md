@@ -1,2 +1,2 @@
 
-App[https://kexite.shinyapps.io/01_Deployment/]
+[App](https://kexite.shinyapps.io/01_Deployment/)
