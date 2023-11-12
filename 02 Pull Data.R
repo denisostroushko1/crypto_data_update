@@ -1,4 +1,5 @@
 
+
 source("Master Packages.R")
 source("Master Functions.R")
 
@@ -39,7 +40,8 @@ for(i in 1:nrow(to_pull)){
   
   df$datetime <- as.Date(df$datetime)
   
-  df <- df %>% select(-X)
+  cols <- c('datetime',  'price',   'high',    'low',   'open')
+  df <- df %>% select(all_of(cols))
   
   api_request(
     FSYM = to_pull$from_symbol[i], 
@@ -51,11 +53,10 @@ for(i in 1:nrow(to_pull)){
   
   process_api_request(API_DATA_RESULT = api_results_f_output) -> raw_data_iter
   
-  cols <- c('timestamp',  'close',   'high',    'low',   'open')
-  
+  cols2 <- c('timestamp',  'close',   'high',    'low',   'open')
   historical_df <- 
     raw_data_iter %>% 
-    select(all_of(cols)) %>% 
+    select(all_of(cols2)) %>% 
     rename(datetime = timestamp, 
            price = close)
 
