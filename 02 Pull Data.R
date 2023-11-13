@@ -20,6 +20,7 @@ if(file.exists('keys.R') == F){
   print(Sys.getenv("access_key"))
   print(Sys.getenv("secret_key"))
   print(Sys.getenv("aws_region"))
+  print('If we see "***" then the keys were read in right')
   
         Sys.setenv("AWS_ACCESS_KEY_ID" = Sys.getenv("access_key"),
                    "AWS_SECRET_ACCESS_KEY" = Sys.getenv("secret_key"), 
