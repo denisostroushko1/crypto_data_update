@@ -136,8 +136,10 @@ for(i in 1:length(dates_to_collect)){
 
 }
 
-write.csv(df, "./Data/master_CMC_scraped.csv")
+write.csv(df, "master_CMC_scraped.csv")
 
-put_object(file = "./Data/master_CMC_scraped.csv", 
+put_object(file = "master_CMC_scraped.csv", 
            object = "master_CMC_scraped.csv",
            bucket = bucket_name)  
+
+unlink(df, "master_CMC_scraped.csv")
