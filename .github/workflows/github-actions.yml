@@ -35,6 +35,9 @@ jobs:
               any::httr
               any::rlang
               any::secret
+              any::rvest
+              any::xml2
+              any::stringr
               
       - name: Execute R Script
         env:
