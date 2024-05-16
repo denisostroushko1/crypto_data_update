@@ -138,8 +138,14 @@ for(i in 1:length(dates_to_collect)){
 
 write.csv(df, "master_CMC_scraped.csv")
 
-put_object(file = "master_CMC_scraped.csv", 
-           object = "master_CMC_scraped.csv",
-           bucket = bucket_name)  
+if(file.exists('keys.R') == F){
+  put_object(file = "master_CMC_scraped.csv", 
+             object = "master_CMC_scraped.csv",
+             bucket = Sys.getenv("bucket_name"))
+}else{
+  put_object(file = "master_CMC_scraped.csv", 
+             object = "master_CMC_scraped.csv",
+             bucket = bucket_name)   
+}
 
 unlink(df, "master_CMC_scraped.csv")
