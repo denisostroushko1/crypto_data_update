@@ -44,7 +44,7 @@ jobs:
             bucket_name: ${{secrets.BUCKET_NAME}}
             
         run: |
-            Rscript 02\ Pull\ Data.R
+            Rscript 03\ Pull\ Data.R
           
       - name: Setup git config
         run: |
