@@ -9,6 +9,8 @@ scrape_200_from_coinmarketcap <- function(year, month, day){
   ##########
   webpage <- read_html(url)
   
+  webpage %>% html_node("body") %>% html_text()
+  
   body_content <- webpage %>%
     html_node("body")
   

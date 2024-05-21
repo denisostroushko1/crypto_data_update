@@ -126,26 +126,32 @@ dates_to_collect <- data_to_collect[data_to_collect > max(as.Date(df$date))]
 
 print(paste0("There will be ", length(dates_to_collect), " new weeks of snapshot data from CMC"))
 
-for(i in 1:length(dates_to_collect)){
+if(length(dates_to_collect) != 0){
   
-  year_input <-  year(dates_to_collect[i])
-  month_input <- month(dates_to_collect[i])
-  day_input <-   day(dates_to_collect[i])
-  iter_df <- scrape_200_from_coinmarketcap(year_input, month_input, day_input)
-  df <- rbind(df, scrape_200_from_coinmarketcap(year_input, month_input, day_input))
+  print("Staring CMC loop")
+  
+  for(i in 1:length(dates_to_collect)){
+    
+    year_input <-  year(dates_to_collect[i])
+    month_input <- month(dates_to_collect[i])
+    day_input <-   day(dates_to_collect[i])
+    iter_df <- scrape_200_from_coinmarketcap(year_input, month_input, day_input)
+    df <- rbind(df, scrape_200_from_coinmarketcap(year_input, month_input, day_input))
+  
+  }
+  
+  write.csv(df, "master_CMC_scraped.csv")
+  
+  if(file.exists('keys.R') == F){
+    put_object(file = "master_CMC_scraped.csv", 
+               object = "master_CMC_scraped.csv",
+               bucket = Sys.getenv("bucket_name"))
+  }else{
+    put_object(file = "master_CMC_scraped.csv", 
+               object = "master_CMC_scraped.csv",
+               bucket = bucket_name)   
+  }
+  
+  unlink("master_CMC_scraped.csv")
 
 }
-
-write.csv(df, "master_CMC_scraped.csv")
-
-if(file.exists('keys.R') == F){
-  put_object(file = "master_CMC_scraped.csv", 
-             object = "master_CMC_scraped.csv",
-             bucket = Sys.getenv("bucket_name"))
-}else{
-  put_object(file = "master_CMC_scraped.csv", 
-             object = "master_CMC_scraped.csv",
-             bucket = bucket_name)   
-}
-
-unlink("master_CMC_scraped.csv")

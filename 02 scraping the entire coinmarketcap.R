@@ -56,6 +56,7 @@ f_df <-
   )
 
 #   i = 1
+#   i = length(data_to_collect)
 
 start_time = Sys.time()
 for(i in 1:length(data_to_collect)){
