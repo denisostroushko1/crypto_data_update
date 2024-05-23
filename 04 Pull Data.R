@@ -163,7 +163,7 @@ if(length(dates_to_collect) != 0){
   # STEP 1: identify any new coins that are not in the master file of all coins and 
   # exchanges where to pull them from 
 
-if(wday(Sys.Date(), week_start = 1) != 1){
+if(wday(Sys.Date(), week_start = 1) != 7){
   print("Not updating repository of available pairs today"); 
 }
 
@@ -220,12 +220,7 @@ if(wday(Sys.Date(), week_start = 1) == 7){
     save_object(object = obj, file = tempfile_15)
     
     old_coins_data <- read.csv(tempfile_15)
-    
-  if(T == F){
-    
-    old_coins_data <- old_coins_data %>% filter(datetime <= as.Date("2024-05-20"))
-    
-    }
+
     
   ## popilate a list and turn it into a df later rather than growing a data frame within a loop 
   populate_list <- vector(mode = "list", length = length(to_populate_3$symbol_from))
