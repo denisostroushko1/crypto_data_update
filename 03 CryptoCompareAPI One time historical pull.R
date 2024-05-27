@@ -18,6 +18,8 @@ major_historical_df <- data.frame(
 
 i = 3736
 
+ 
+
 for(i in 3736:nrow(to_populate_3)){
     
   if(i %% 100 == 0){print(paste0("Iteration ", i, " of ", nrow(to_populate_3)))}
@@ -49,6 +51,30 @@ for(i in 3736:nrow(to_populate_3)){
   if(i %% 100 == 0){print(paste0("Running total rows of data: ", nrow(major_historical_df)))}
 }
 
+#################
+# removing some weird instances of insignificant coins
+# they are supposed to have data, but have no records 
+
+
+to_populate_3 %>% select(symbol_from) %>% 
+  unique() %>% 
+  mutate(in_repo = 1) -> in_master_list
+
+
+major_historical_df %>% select(symbol_from) %>% 
+  unique() %>% 
+  mutate(in_historical = 1) -> in_historical
+
+full_join(in_master_list, in_historical, by = "symbol_from") %>% arrange(symbol_from) -> check_df 
+
+check_df %>% filter(is.na(in_historical )) %>% select(symbol_from) %>% unlist() -> to_remove
+
+major_historical_df <- major_historical_df %>% 
+  filter(!(symbol_from %in% to_remove))
+
+#################
+
+
 major_historical_df2 <- 
   major_historical_df %>% 
   filter(price > 0)
@@ -60,6 +86,18 @@ major_historical_df3 <- distinct(major_historical_df2)
 
 ## check for duplicates again 
 if(T == F){
+  
+  to_populate_3 %>% select(symbol_from) %>% 
+  unique() %>% 
+  mutate(in_repo = 1) -> in_master_list
+
+  
+  major_historical_df %>% select(symbol_from) %>% 
+    unique() %>% 
+    mutate(in_historical = 1) -> in_historical
+  
+  full_join(in_master_list, in_historical, by = "symbol_from") %>% arrange(symbol_from) -> check_df 
+  
   major_historical_df3 %>% 
     group_by(symbol_from, datetime) %>% 
     summarise(n = n()) %>% 

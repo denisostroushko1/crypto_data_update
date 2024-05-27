@@ -97,9 +97,6 @@ if(length(data$Data$exchanges) != 0){
     to_populate$symbol_to <- factor(to_populate$symbol_to, levels = order_symbols)
   
   ####################
-  View(to_populate)
-  
-  ####################
   # OBJECTIVE: I want to have one row per coin, whichever exchange it comes from. 
   #     ideally, it will be measured in USD or USDT, or something like that 
   #     this exchange should have the highest possible amount of historcial days 
@@ -144,16 +141,4 @@ if(length(data$Data$exchanges) != 0){
   
   print(paste0("Unique assets after selecting one asset-row: ", prettyNum(length(unique(to_populate_3$symbol_from)), big.mark = ",")))
   
-  # so this is the list of pairs that we need to collect and process 
-  
-  to_populate_3
-  
-  table(I(to_populate_3$data_days_amount > 2000))
-  
-  to_populate_3 %>% 
-    filter(data_days_amount > 2000) %>% 
-    select(symbol_from, data_days_amount) %>% View()
-  
-  #     colnames(to_populate_3)
-  #     "histo_minute_start" "histo_minute_end"   "isActive"           "exchange"           "symbol_from"        "symbol_to"          "data_days_amount"   "row_id"        
 }
