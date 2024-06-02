@@ -34,6 +34,12 @@ if(file.exists('keys.R') == F){
 #################################################################
 # collect daily data from the API service for the risk dashboard 
 
+print("
+      ***********************************<br>
+      PART 1 <br>
+      ***********************************<br>
+      ")
+
 for(i in 1:nrow(to_pull)){
   tempfile_15 <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
   
@@ -113,6 +119,15 @@ print(paste0("Saved: ", obj))
 
 df <- read.csv(tempfile_15)[,-1]
 
+# ********************************************************************************
+# ********************************************************************************
+
+print("
+      ***********************************<br>
+      PART 2 <br>
+      ***********************************<br>
+      ")
+
 ###### 
 # identify new data to pull 
 starting_date <- as.Date("2013-04-28")
@@ -156,9 +171,14 @@ if(length(dates_to_collect) != 0){
 
 }
 
-
 ################################################################
 # collect data from CryptoCompare API and update the data in AWS 
+
+print("
+      ***********************************<br>
+      PART 3 <br>
+      ***********************************<br>
+      ")
 
   # STEP 1: identify any new coins that are not in the master file of all coins and 
   # exchanges where to pull them from 
@@ -211,6 +231,13 @@ if(wday(Sys.Date(), week_start = 1) == 7){
   ###############
   # now download new data from API based on updated list of available pairs 
   
+  
+print("
+      ***********************************<br>
+      PART 3 <br>
+      ***********************************<br>
+      ")
+  
   print("Downloading old coins data from AWS")
     
     # data with pairs is stored in 'to_populate_3'
@@ -227,6 +254,7 @@ if(wday(Sys.Date(), week_start = 1) == 7){
   
   for(i in 1:length(populate_list)){
       
+    print(paste0("Last loop: ", i))
     ## file with AWS keys and such exists only on my local machine, and I want 
     # progress printed to my console only on my local machine 
     if(file.exists("keys.R")){
