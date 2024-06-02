@@ -262,9 +262,20 @@ print("
     }
     
     # this ensures that only pull a small slice of the data from the API 
-    as.numeric(
-      as.Date(Sys.Date()) - as.Date(max(old_coins_data[old_coins_data$symbol_from == to_populate_3$symbol_from[i], ]$datetime))
-    ) -> new_days_to_pull_i
+    
+    
+    new_days_to_pull_i <- ifelse(
+      !(to_populate_3$symbol_from[i] %in% old_coins_data$symbol_from), 
+      
+      as.numeric(
+          as.Date(Sys.Date()) - as.Date(to_populate_3[i, ]$histo_minute_start)
+          ), 
+    
+      as.numeric(
+        as.Date(Sys.Date()) - 
+          as.Date(max(old_coins_data[old_coins_data$symbol_from == to_populate_3$symbol_from[i], ]$datetime, na.rm = T))
+      ) 
+    )
     
     # get the data 
     api_request(
