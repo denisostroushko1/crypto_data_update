@@ -254,7 +254,7 @@ print("
   
   for(i in 1:length(populate_list)){
       
-    print(paste0("Last loop: ", i))
+    print(paste0("Last loop: ", i, " of ", length(populate_list)))
     ## file with AWS keys and such exists only on my local machine, and I want 
     # progress printed to my console only on my local machine 
     if(file.exists("keys.R")){
