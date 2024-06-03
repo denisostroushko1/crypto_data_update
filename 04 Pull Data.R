@@ -301,16 +301,11 @@ print("
       historical_df$symbol_from = to_populate_3$symbol_from[i]
       historical_df$symbol_to = to_populate_3$symbol_to[i]
       
-      historical_df <- 
-        ifelse(
-          !(to_populate_3$symbol_from[i] %in% old_coins_data$symbol_from), 
-      
-          historical_df, 
-          
-          historical_df %>% filter(
+      if(!is.na(max(old_coins_data[old_coins_data$symbol_from == to_populate_3$symbol_from[i], ]$datetime))){
+        historical_df %>% filter(
             datetime > max(old_coins_data[old_coins_data$symbol_from == to_populate_3$symbol_from[i], ]$datetime)
-          )
         )
+      }
       
       populate_list[[i]] = historical_df
     }
