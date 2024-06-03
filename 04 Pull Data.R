@@ -34,10 +34,11 @@ if(file.exists('keys.R') == F){
 #################################################################
 # collect daily data from the API service for the risk dashboard 
 
-print("
-      ***********************************<br>
-      PART 1 <br>
-      ***********************************<br>
+cat("
+      ***********************************
+                 
+                  PART 1
+      ***********************************
       ")
 
 for(i in 1:nrow(to_pull)){
@@ -122,10 +123,11 @@ df <- read.csv(tempfile_15)[,-1]
 # ********************************************************************************
 # ********************************************************************************
 
-print("
-      ***********************************<br>
-      PART 2 <br>
-      ***********************************<br>
+cat("
+      ***********************************
+                 
+                  PART 2
+      ***********************************
       ")
 
 ###### 
@@ -174,10 +176,11 @@ if(length(dates_to_collect) != 0){
 ################################################################
 # collect data from CryptoCompare API and update the data in AWS 
 
-print("
-      ***********************************<br>
-      PART 3 <br>
-      ***********************************<br>
+cat("
+      ***********************************
+                 
+                  PART 3
+      ***********************************
       ")
 
   # STEP 1: identify any new coins that are not in the master file of all coins and 
@@ -232,10 +235,11 @@ if(wday(Sys.Date(), week_start = 1) == 1){
   # now download new data from API based on updated list of available pairs 
   
   
-print("
-      ***********************************<br>
-      PART 3 <br>
-      ***********************************<br>
+cat("
+      ***********************************
+                 
+                  PART 4 
+      ***********************************
       ")
   
   print("Downloading old coins data from AWS")
@@ -268,12 +272,12 @@ print("
       !(to_populate_3$symbol_from[i] %in% old_coins_data$symbol_from), 
       
       as.numeric(
-          as.Date(Sys.Date()) - as.Date(to_populate_3[i, ]$histo_minute_start)
+          anytime::anydate(Sys.Date()) - anytime::anydate(to_populate_3[i, ]$histo_minute_start)
           ), 
     
       as.numeric(
-        as.Date(Sys.Date()) - 
-          as.Date(max(old_coins_data[old_coins_data$symbol_from == to_populate_3$symbol_from[i], ]$datetime, na.rm = T))
+        anytime::anydate(Sys.Date()) - 
+          anytime::anydate(max(old_coins_data[old_coins_data$symbol_from == to_populate_3$symbol_from[i], ]$datetime, na.rm = T))
       ) 
     )
     
