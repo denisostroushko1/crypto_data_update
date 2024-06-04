@@ -200,7 +200,7 @@ if(wday(Sys.Date(), week_start = 1) != 7){
   
 
 # Get this pull done on a Monday 
-if(wday(Sys.Date(), week_start = 1) == 1){
+if(wday(Sys.Date(), week_start = 1) == 7){
   # data with pairs is stored in 'to_populate_3'
   print("Started update of repository of available pairs today")
   

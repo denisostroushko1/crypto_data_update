@@ -4,23 +4,10 @@ source("Master Packages.R")
 #     colnames(to_populate_3)
 #     "histo_minute_start" "histo_minute_end"   "isActive"           "exchange"           "symbol_from"        "symbol_to"          "data_days_amount"   "row_id"        
 
-major_historical_df <- data.frame(
-  datetime = POSIXct(), 
-  price = numeric(), 
-  high = numeric(), 
-  low = numeric(), 
-  open = numeric(), 
-  volumefrom = numeric(), 
-  volumeto = numeric(), 
-  symbol_from = character(),
-  symbol_to  = character()
-)
-
-i = 3736
-
+populate_list <- vector(mode = "list", length = length(to_populate_3$symbol_from))
  
 
-for(i in 3736:nrow(to_populate_3)){
+for(i in 1:nrow(to_populate_3)){
     
   if(i %% 100 == 0){print(paste0("Iteration ", i, " of ", nrow(to_populate_3)))}
   
@@ -45,16 +32,17 @@ for(i in 3736:nrow(to_populate_3)){
     historical_df$symbol_from = to_populate_3$symbol_from[i]
     historical_df$symbol_to = to_populate_3$symbol_to[i]
   
-    major_historical_df = rbind(major_historical_df, historical_df)
+    historical_df$datetime <- as.Date(historical_df$datetime, format="%m/%d/%Y")
+
+    populate_list[[i]] <- historical_df
   }
-  
-  if(i %% 100 == 0){print(paste0("Running total rows of data: ", nrow(major_historical_df)))}
 }
 
 #################
 # removing some weird instances of insignificant coins
 # they are supposed to have data, but have no records 
 
+major_historical_df <- bind_rows(populate_list)
 
 to_populate_3 %>% select(symbol_from) %>% 
   unique() %>% 
