@@ -186,7 +186,7 @@ cat("
   # STEP 1: identify any new coins that are not in the master file of all coins and 
   # exchanges where to pull them from 
 
-if(wday(Sys.Date(), week_start = 1) != 7){
+if(wday(Sys.Date(), week_start = 1) != 2){
   print("Not updating repository of available pairs today"); 
 }
 
@@ -200,7 +200,7 @@ if(wday(Sys.Date(), week_start = 1) != 7){
   
 
 # Get this pull done on a Monday 
-if(wday(Sys.Date(), week_start = 1) == 7){
+if(wday(Sys.Date(), week_start = 1) == 2){
   # data with pairs is stored in 'to_populate_3'
   print("Started update of repository of available pairs today")
   
@@ -242,7 +242,7 @@ cat("
       ***********************************
       ")
   
-  print("Downloading old coins data from AWS")
+  print("Downloading old data from AWS")
     
     # data with pairs is stored in 'to_populate_3'
     tempfile_15 <- tempfile() 
@@ -250,7 +250,9 @@ cat("
     obj =  paste0("s3://crypto-data-shiny/", 'all coins historical data.csv')
     save_object(object = obj, file = tempfile_15)
     
-    old_coins_data <- read.csv(tempfile_15)
+    old_coins_data <- read.csv(tempfile_15) 
+    
+    if("X" %in% colnames(old_coins_data)){old_coins_data <- old_coins_data %>% select(-X)}
 
     
   ## popilate a list and turn it into a df later rather than growing a data frame within a loop 
@@ -315,12 +317,16 @@ cat("
     }
   }
   
+  print(paste0("New rows of raw data added to the historical data set: ", prettyNum(nrow(bind_rows(populate_list)), big.mark = ",")))
+  
   ## turn populate_list into a data frame and append to the old_coins data 
   
-  major_historical_df3 <- 
-    rbind(old_coins_data %>% select(-X), 
-          bind_rows(populate_list)
-          )
+  new_data <- bind_rows(populate_list)
+  new_data$datetime <- as.Date(new_data$datetime, format="%Y-%m-%d")
+  old_coins_data$datetime <- as.Date(old_coins_data$datetime, format="%Y-%m-%d")
+  
+  major_historical_df3 <- rbind(old_coins_data, new_data)
+  major_historical_df3$datetime <- as.Date(major_historical_df3$datetime, format="%Y-%m-%d")
   
   write.csv(major_historical_df3, "all coins historical data.csv")
 

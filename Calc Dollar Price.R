@@ -39,6 +39,8 @@ save_object(object = obj, file = tempfile_15)
 
 major_historical_df3 <- read.csv(tempfile_15)
 
+major_historical_df3$datetime <- as.Date(major_historical_df3$datetime)
+
 ######################################################
 
 
