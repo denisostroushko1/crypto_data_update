@@ -186,7 +186,7 @@ cat("
   # STEP 1: identify any new coins that are not in the master file of all coins and 
   # exchanges where to pull them from 
 
-if(wday(Sys.Date(), week_start = 1) != 2){
+if(wday(Sys.Date(), week_start = 1) != 3){
   print("Not updating repository of available pairs today"); 
 }
 
@@ -200,7 +200,7 @@ if(wday(Sys.Date(), week_start = 1) != 2){
   
 
 # Get this pull done on a Monday 
-if(wday(Sys.Date(), week_start = 1) == 2){
+if(wday(Sys.Date(), week_start = 1) == 3){
   # data with pairs is stored in 'to_populate_3'
   print("Started update of repository of available pairs today")
   
@@ -328,7 +328,155 @@ cat("
   major_historical_df3 <- rbind(old_coins_data, new_data)
   major_historical_df3$datetime <- as.Date(major_historical_df3$datetime, format="%Y-%m-%d")
   
-  write.csv(major_historical_df3, "all coins historical data.csv")
+  
+  cat("
+      *******************************
+                PART 5 
+      *******************************
+      
+      ")
+    
+    
+  # some clearing: there is no easy way to convert EUR and other real currencies to 
+  # USD that is easy. So, I am willing to discard these data 
+  major_historical_df3 <- major_historical_df3 %>% filter(!(symbol_to %in% c("EUR", "JPY", "AUD")))
+  
+  # these are all options of cryptos to convert into from some crypto 
+  major_historical_df3 %>% 
+    select(symbol_to) %>% unique() %>% unlist() -> symbol_to_options 
+  
+  # remove USD, because that is the final destination 
+  symbol_to_options <- symbol_to_options[symbol_to_options != "USD"]
+  
+  # collect chains of conversion through cryptos until we reach USD 
+  results <- vector(mode = "list", length = length(symbol_to_options))
+  
+  for(i in 1:length(symbol_to_options)){
+    
+    curr = symbol_to_options[i]
+    iter_res = c(curr)
+    
+    while(curr != "USD"){
+      
+      major_historical_df3 %>% filter(symbol_from == curr) %>% select(symbol_to) %>% unique() %>% unlist() -> curr
+      iter_res <- c(iter_res, curr)
+      
+    }
+    
+    names(iter_res) = paste0("to_",1:length(iter_res))
+    results[[i]] = iter_res
+    
+    print(i)
+  }
+  
+  ### these are all chains of conversion that eventually ends up in the US dollar. 
+  ### it just so happens that they end up in USD, I expect that perhaps some will eventually
+  ### end up in the USDT or something like that 
+  
+   ############################################################################################
+  
+  ## EXAMPLE OF A CONVERSION CHAIN 
+  if(T == F){
+    options(scipen = 999)
+    rbind(
+      major_historical_df3 %>% filter(symbol_to == "DOGE") %>% head(1),
+      major_historical_df3 %>% filter(symbol_from == "DOGE") %>% head(1),
+      major_historical_df3 %>% filter(symbol_from == "BTC") %>% head(1)
+    ) %>% 
+      mutate(price = round(price, 6))
+  }
+  
+  #### each entry in a list is a chain of conversion 
+  #### each sub entry is a step within a chain 
+  
+  #   bind_rows(results)
+  
+  conversion_res <- vector(mode = "list", length = nrow(bind_rows(results)))
+  
+  for(i in 1:nrow(bind_rows(results))    ){
+  
+    # bind_rows(results)[i, ]
+    
+    bind_rows(results)[i, ] %>% apply(., 1, function(x){sum(is.na(x))}) -> na_entries 
+    bind_rows(results)[i, ] %>% length() -> total_length
+    
+    loop_over_N = total_length - na_entries - 1 # take away one because one of the entries is the final destination 
+    
+    conversion_res[[i]] <- vector(mode = "list", length = loop_over_N)
+    
+    for( j in 1:loop_over_N   ){
+      
+      major_historical_df3 %>% filter(symbol_from == bind_rows(results)[i, j] %>% unlist() & 
+                                        symbol_to == bind_rows(results)[i, (j + 1)]  %>% unlist()
+                                      ) %>% 
+        select(datetime, price) -> iter_df
+      
+      iter_df$datetime <- as.Date(iter_df$datetime)
+      
+      if(j == 1){iter_df <- iter_df %>% mutate(conversion_from = bind_rows(results)[i, 1] %>% unlist()) %>% select(conversion_from, datetime, price)}
+      
+      conversion_res[[i]][[j]] <- iter_df
+    }
+    
+  }
+  
+  #### process the results 
+  to_usd_results <- vector(mode = "list", length = length(conversion_res))
+  
+  for(i in 1:length(to_usd_results)){
+  
+    # join all steps of conversion on a day 
+    reduce(conversion_res[[i]], full_join, by = "datetime") -> all_res_i
+    
+    # identify and multiply all 'prices' columns 
+    which(substr(colnames(all_res_i), 1, 5) == "price") -> price_cols_id
+    colnames(all_res_i)[price_cols_id] -> price_cols
+    
+    all_res_i %>% 
+      select(all_of(price_cols)) %>% 
+      apply(., 1, function(x){prod(x)}) -> usd_price
+    
+    all_res_i$usd_price <- usd_price
+    
+    all_res_i <- all_res_i %>% select(conversion_from, datetime, usd_price)
+      
+    to_usd_results[[i]] <- all_res_i
+  }
+  
+  final_conversions_df <- bind_rows(to_usd_results)
+  
+  ###############################
+  
+  # final data set 
+  major_historical_df4 <- 
+    left_join(
+      major_historical_df3, 
+      final_conversions_df %>% rename(symbol_to = conversion_from ), 
+      
+      by = c("symbol_to", "datetime")
+    )
+  ## 
+  
+  major_historical_df4 <- 
+    major_historical_df4 %>% 
+    mutate(
+      usd_price = ifelse(symbol_to == "USD", 1, price )
+    ) %>% 
+    na.omit()
+  
+  summary(major_historical_df4)
+  
+  major_historical_df4 <- 
+    major_historical_df4 %>% 
+    rename(
+      price_in_symbol_to = price, 
+      high_in_symbol_to = high, 
+      low_in_symbol_to = low, 
+      open_in_symbol_to = open
+    ) 
+
+  
+  write.csv(major_historical_df4, "all coins historical data.csv")
 
   if(file.exists('keys.R') == F){
     put_object(file = "all coins historical data.csv", 
