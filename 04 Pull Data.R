@@ -186,7 +186,7 @@ cat("
   # STEP 1: identify any new coins that are not in the master file of all coins and 
   # exchanges where to pull them from 
 
-if(wday(Sys.Date(), week_start = 1) != 3){
+if(wday(Sys.Date(), week_start = 1) != 2){
   print("Not updating repository of available pairs today"); 
 }
 
@@ -200,7 +200,7 @@ if(wday(Sys.Date(), week_start = 1) != 3){
   
 
 # Get this pull done on a Monday 
-if(wday(Sys.Date(), week_start = 1) == 3){
+if(wday(Sys.Date(), week_start = 1) == 2){
   # data with pairs is stored in 'to_populate_3'
   print("Started update of repository of available pairs today")
   
