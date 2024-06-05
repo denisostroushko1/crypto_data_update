@@ -457,12 +457,7 @@ cat("
       
       by = c("symbol_to", "datetime")
     )
-  
-    prettyNum(nrow(major_historical_df4), big.mark = ",")
-    prettyNum(length(unique(major_historical_df4$symbol_from)), big.mark = ",")
-    
   ## 
-  
   major_historical_df4 <- 
     major_historical_df4 %>% 
     mutate(
@@ -471,10 +466,14 @@ cat("
                          price * usd_price)
     ) %>% 
     select(-usd_price) %>% 
-    rename(usd_price = usd_price_final)
+    rename(usd_price = usd_price_final) %>% na.omit() %>% 
+    filter(symbol_from != "WBTC")
+  
+    prettyNum(nrow(major_historical_df4), big.mark = ",")
+    prettyNum(length(unique(major_historical_df4$symbol_from)), big.mark = ",")
+  
   
 ####################
-  write.csv(major_historical_df4, "all coins historical data.csv")
 
   #######
   # one time save of the data since I know I got it right 
@@ -499,6 +498,9 @@ cat("
     
     unlink(f_name) 
   }
+  
+  
+  write.csv(major_historical_df4, "all coins historical data.csv")
   
   if(file.exists('keys.R') == F){
     put_object(file = "all coins historical data.csv", 
