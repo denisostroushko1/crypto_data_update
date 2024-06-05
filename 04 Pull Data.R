@@ -186,7 +186,7 @@ cat("
   # STEP 1: identify any new coins that are not in the master file of all coins and 
   # exchanges where to pull them from 
 
-if(wday(Sys.Date(), week_start = 1) != 2){
+if(wday(Sys.Date(), week_start = 1) != 7){
   print("Not updating repository of available pairs today"); 
 }
 
@@ -200,7 +200,7 @@ if(wday(Sys.Date(), week_start = 1) != 2){
   
 
 # Get this pull done on a Monday 
-if(wday(Sys.Date(), week_start = 1) == 2){
+if(wday(Sys.Date(), week_start = 1) == 7){
   # data with pairs is stored in 'to_populate_3'
   print("Started update of repository of available pairs today")
   
@@ -366,7 +366,6 @@ cat("
     names(iter_res) = paste0("to_",1:length(iter_res))
     results[[i]] = iter_res
     
-    print(i)
   }
   
   ### these are all chains of conversion that eventually ends up in the US dollar. 
@@ -460,21 +459,11 @@ cat("
   major_historical_df4 <- 
     major_historical_df4 %>% 
     mutate(
-      usd_price = ifelse(symbol_to == "USD", 1, price )
+      usd_price_final = ifelse(symbol_to == "USD", 
+                         price, 
+                         price * usd_price)
     ) %>% 
     na.omit()
-  
-  summary(major_historical_df4)
-  
-  major_historical_df4 <- 
-    major_historical_df4 %>% 
-    rename(
-      price_in_symbol_to = price, 
-      high_in_symbol_to = high, 
-      low_in_symbol_to = low, 
-      open_in_symbol_to = open
-    ) 
-
   
   write.csv(major_historical_df4, "all coins historical data.csv")
 
