@@ -47,11 +47,15 @@ if(file.exists('keys.R') == F){
   
 populate_list <- vector(mode = "list", length = length(to_populate_3$symbol_from))
  
-system.time({
+if(T == F){
+  lapply(populate_list, length) %>% unlist() %>% {which(. == 0)} 
+}
+
+####################################################
   
   nrow_running = 0
   
-  for(i in 3241:nrow(to_populate_3)){
+  for(i in 4138:nrow(to_populate_3)){
       
     if(i %% 100 == 0){print(paste0("Iteration ", i, " of ", nrow(to_populate_3), 
                                    ". Running total rows: ", prettyNum(nrow_running, big.mark = ",")
@@ -90,8 +94,7 @@ system.time({
       nrow_running <- nrow_running + nrow(historical_df)
     }
   }
-})
-
+####################################################
 
 #################
 # removing some weird instances of insignificant coins
@@ -100,6 +103,7 @@ system.time({
 major_historical_df <- bind_rows(populate_list)
 
 prettyNum(nrow(major_historical_df), big.mark = ",")
+prettyNum(length(unique(major_historical_df$symbol_from)), big.mark = ",")
 
 to_populate_3 %>% select(symbol_from) %>% 
   unique() %>% 
@@ -119,19 +123,28 @@ check_df %>% filter(is.na(in_historical )) %>% select(symbol_from) %>% unlist() 
 major_historical_df <- major_historical_df %>% 
   filter(!(symbol_from %in% to_remove))
 
-#################
 
+prettyNum(nrow(major_historical_df), big.mark = ",")
+prettyNum(length(unique(major_historical_df$symbol_from)), big.mark = ",")
+
+#################
 
 major_historical_df2 <- 
   major_historical_df %>% 
   filter(price > 0)
+
+prettyNum(nrow(major_historical_df2), big.mark = ",")
+prettyNum(length(unique(major_historical_df2$symbol_from)), big.mark = ",")
 
 ####################################
 # remove all duplicated rows of data 
 
 major_historical_df3 <- distinct(major_historical_df2)
 
-## check for duplicates again 
+prettyNum(nrow(major_historical_df3), big.mark = ",")
+prettyNum(length(unique(major_historical_df3$symbol_from)), big.mark = ",")
+
+## check for duplicates again  
 if(T == F){
   
   to_populate_3 %>% select(symbol_from) %>% 

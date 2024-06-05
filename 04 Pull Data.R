@@ -341,6 +341,9 @@ cat("
   # USD that is easy. So, I am willing to discard these data 
   major_historical_df3 <- major_historical_df3 %>% filter(!(symbol_to %in% c("EUR", "JPY", "AUD")))
   
+  prettyNum(nrow(major_historical_df3), big.mark = ",")
+  prettyNum(length(unique(major_historical_df3$symbol_from)), big.mark = ",")
+  
   # these are all options of cryptos to convert into from some crypto 
   major_historical_df3 %>% 
     select(symbol_to) %>% unique() %>% unlist() -> symbol_to_options 
@@ -454,6 +457,10 @@ cat("
       
       by = c("symbol_to", "datetime")
     )
+  
+    prettyNum(nrow(major_historical_df4), big.mark = ",")
+    prettyNum(length(unique(major_historical_df4$symbol_from)), big.mark = ",")
+    
   ## 
   
   major_historical_df4 <- 
@@ -463,10 +470,36 @@ cat("
                          price, 
                          price * usd_price)
     ) %>% 
-    na.omit()
+    select(-usd_price) %>% 
+    rename(usd_price = usd_price_final)
   
+####################
   write.csv(major_historical_df4, "all coins historical data.csv")
 
+  #######
+  # one time save of the data since I know I got it right 
+  if(T == F){
+    # one time back up of the data set 
+    
+    f_name = paste0(
+      "all coins historical data_", 
+      year(Sys.Date()), 
+      "_", 
+      month(Sys.Date()), 
+      "_", 
+      day(Sys.Date()), 
+      ".csv"
+    )
+    
+    write.csv(major_historical_df4, f_name)
+    
+    put_object(file = f_name, 
+               object = f_name,
+               bucket = bucket_name)
+    
+    unlink(f_name) 
+  }
+  
   if(file.exists('keys.R') == F){
     put_object(file = "all coins historical data.csv", 
                object = "all coins historical data.csv",
@@ -480,3 +513,5 @@ cat("
   unlink("all coins historical data.csv")
 
 }
+
+  
