@@ -1,4 +1,5 @@
 
+if(file.exists('keys.R') == T){rm(list = ls())}
 
 source("Master Packages.R")
 source("Master Functions.R")
@@ -186,7 +187,9 @@ cat("
   # STEP 1: identify any new coins that are not in the master file of all coins and 
   # exchanges where to pull them from 
 
-if(wday(Sys.Date(), week_start = 1) != 7){
+WEEK_DAY_FOR_UPDATE = 3 
+
+if(wday(Sys.Date(), week_start = 1) != WEEK_DAY_FOR_UPDATE){
   print("Not updating repository of available pairs today"); 
 }
 
@@ -200,7 +203,7 @@ if(wday(Sys.Date(), week_start = 1) != 7){
   
 
 # Get this pull done on a Monday 
-if(wday(Sys.Date(), week_start = 1) == 7){
+if(wday(Sys.Date(), week_start = 1) == WEEK_DAY_FOR_UPDATE){
   # data with pairs is stored in 'to_populate_3'
   print("Started update of repository of available pairs today")
   
@@ -260,7 +263,6 @@ cat("
   
   for(i in 1:length(populate_list)){
       
-    print(paste0("Last loop: ", i, " of ", length(populate_list)))
     ## file with AWS keys and such exists only on my local machine, and I want 
     # progress printed to my console only on my local machine 
     if(file.exists("keys.R")){
@@ -317,17 +319,15 @@ cat("
     }
   }
   
-  print(paste0("New rows of raw data added to the historical data set: ", prettyNum(nrow(bind_rows(populate_list)), big.mark = ",")))
+  print(paste0("New rows of raw data added to the historical data set: ", prettyNum(nrow(bind_rows(populate_list) %>% distinct()), big.mark = ",")))
+  print(paste0("Data was supposed to be collected for ", prettyNum(length(populate_list), big.mark = ","), " assets "))
+  print(paste0("Data was actually obtained for ", prettyNum(lapply(populate_list, nrow) %>% unlist() %>% length(), 
+                                                            big.mark = ","), " assets"))
   
   ## turn populate_list into a data frame and append to the old_coins data 
   
   new_data <- bind_rows(populate_list)
   new_data$datetime <- as.Date(new_data$datetime, format="%Y-%m-%d")
-  old_coins_data$datetime <- as.Date(old_coins_data$datetime, format="%Y-%m-%d")
-  
-  major_historical_df3 <- rbind(old_coins_data, new_data)
-  major_historical_df3$datetime <- as.Date(major_historical_df3$datetime, format="%Y-%m-%d")
-  
   
   cat("
       *******************************
@@ -339,13 +339,13 @@ cat("
     
   # some clearing: there is no easy way to convert EUR and other real currencies to 
   # USD that is easy. So, I am willing to discard these data 
-  major_historical_df3 <- major_historical_df3 %>% filter(!(symbol_to %in% c("EUR", "JPY", "AUD")))
+  new_data <- new_data %>% filter(!(symbol_to %in% c("EUR", "JPY", "AUD")))
   
-  prettyNum(nrow(major_historical_df3), big.mark = ",")
-  prettyNum(length(unique(major_historical_df3$symbol_from)), big.mark = ",")
+  prettyNum(nrow(new_data), big.mark = ",")
+  prettyNum(length(unique(new_data$symbol_from)), big.mark = ",")
   
   # these are all options of cryptos to convert into from some crypto 
-  major_historical_df3 %>% 
+  new_data %>% 
     select(symbol_to) %>% unique() %>% unlist() -> symbol_to_options 
   
   # remove USD, because that is the final destination 
@@ -361,7 +361,7 @@ cat("
     
     while(curr != "USD"){
       
-      major_historical_df3 %>% filter(symbol_from == curr) %>% select(symbol_to) %>% unique() %>% unlist() -> curr
+      new_data %>% filter(symbol_from == curr) %>% select(symbol_to) %>% unique() %>% unlist() -> curr
       iter_res <- c(iter_res, curr)
       
     }
@@ -381,9 +381,9 @@ cat("
   if(T == F){
     options(scipen = 999)
     rbind(
-      major_historical_df3 %>% filter(symbol_to == "DOGE") %>% head(1),
-      major_historical_df3 %>% filter(symbol_from == "DOGE") %>% head(1),
-      major_historical_df3 %>% filter(symbol_from == "BTC") %>% head(1)
+      new_data %>% filter(symbol_to == "DOGE") %>% head(1),
+      new_data %>% filter(symbol_from == "DOGE") %>% head(1),
+      new_data %>% filter(symbol_from == "BTC") %>% head(1)
     ) %>% 
       mutate(price = round(price, 6))
   }
@@ -408,7 +408,7 @@ cat("
     
     for( j in 1:loop_over_N   ){
       
-      major_historical_df3 %>% filter(symbol_from == bind_rows(results)[i, j] %>% unlist() & 
+      new_data %>% filter(symbol_from == bind_rows(results)[i, j] %>% unlist() & 
                                         symbol_to == bind_rows(results)[i, (j + 1)]  %>% unlist()
                                       ) %>% 
         select(datetime, price) -> iter_df
@@ -450,27 +450,28 @@ cat("
   ###############################
   
   # final data set 
-  major_historical_df4 <- 
+  new_data <- 
     left_join(
-      major_historical_df3, 
+      new_data, 
       final_conversions_df %>% rename(symbol_to = conversion_from ), 
       
       by = c("symbol_to", "datetime")
     )
   ## 
-  major_historical_df4 <- 
-    major_historical_df4 %>% 
+  new_data <- 
+    new_data %>% 
     mutate(
       usd_price_final = ifelse(symbol_to == "USD", 
                          price, 
                          price * usd_price)
     ) %>% 
     select(-usd_price) %>% 
-    rename(usd_price = usd_price_final) %>% na.omit() %>% 
+    rename(usd_price = usd_price_final) %>% 
+    na.omit() %>% 
     filter(symbol_from != "WBTC")
   
-    prettyNum(nrow(major_historical_df4), big.mark = ",")
-    prettyNum(length(unique(major_historical_df4$symbol_from)), big.mark = ",")
+    prettyNum(nrow(new_data), big.mark = ",")
+    prettyNum(length(unique(new_data$symbol_from)), big.mark = ",")
   
   
 ####################
@@ -500,7 +501,13 @@ cat("
   }
   
   
-  write.csv(major_historical_df4, "all coins historical data.csv")
+  
+  old_coins_data$datetime <- as.Date(old_coins_data$datetime, format="%Y-%m-%d")
+  
+  major_historical_df3 <- rbind(old_coins_data, new_data)
+  major_historical_df3$datetime <- as.Date(major_historical_df3$datetime, format="%Y-%m-%d")
+  
+  write.csv(major_historical_df3, "all coins historical data.csv")
   
   if(file.exists('keys.R') == F){
     put_object(file = "all coins historical data.csv", 
