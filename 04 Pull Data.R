@@ -187,7 +187,7 @@ cat("
   # STEP 1: identify any new coins that are not in the master file of all coins and 
   # exchanges where to pull them from 
 
-WEEK_DAY_FOR_UPDATE = 3 
+WEEK_DAY_FOR_UPDATE = 4
 
 if(wday(Sys.Date(), week_start = 1) != WEEK_DAY_FOR_UPDATE){
   print("Not updating repository of available pairs today"); 
