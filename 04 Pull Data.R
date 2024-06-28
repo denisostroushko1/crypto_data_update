@@ -187,7 +187,7 @@ cat("
   # STEP 1: identify any new coins that are not in the master file of all coins and 
   # exchanges where to pull them from 
 
-WEEK_DAY_FOR_UPDATE = 4
+WEEK_DAY_FOR_UPDATE = 7
 
 if(wday(Sys.Date(), week_start = 1) != WEEK_DAY_FOR_UPDATE){
   print("Not updating repository of available pairs today"); 
@@ -232,10 +232,18 @@ if(wday(Sys.Date(), week_start = 1) == WEEK_DAY_FOR_UPDATE){
     }
     
   unlink("available assets in API.csv")
-
+}else{
+  to_populate_3 <- to_populate_3_old
+}
   
   ###############
   # now download new data from API based on updated list of available pairs 
+  
+  # It is clear now that updating data for all 4,300 assets as of 6/28/2024
+  # and growing is not feasible due to the set up of a free api version 
+  
+  # so, we will update the data until the data stops being available 
+  # the following day, we pick up wehre we left off and keep on going 
   
   
 cat("
@@ -261,17 +269,56 @@ cat("
   ## popilate a list and turn it into a df later rather than growing a data frame within a loop 
   populate_list <- vector(mode = "list", length = length(to_populate_3$symbol_from))
   
-  for(i in 1:length(populate_list)){
-      
-    ## file with AWS keys and such exists only on my local machine, and I want 
+  ### create the data frame one time, this will have one entry only: 
+  # what asset to pick up to continue updating the data 
+  {
+    if(T == F){
+      write.csv(data.frame(last_symbol = "BTC"), 
+                "where to start.csv")
+
+      put_object(file = "where to start.csv", 
+           object = "where to start.csv",
+           bucket = bucket_name)   
+    }
+  }
+  
+  # read in the last symbol to popuate 
+  tempfile_15 <- tempfile() 
+  obj =  paste0("s3://crypto-data-shiny/", 'where to start.csv')
+  save_object(object = obj, file = tempfile_15)
+  where_to_start <- read.csv(tempfile_15)[,-1]
+  # old version of the update used a sorted list and stopped working at around the 
+  # same spot 
+  # such as A, B, C, D, E, F, ... and it would break at C or D 
+  # 
+  # now, we want to reorder the list such that if we break at D 
+  # then the next update is D, E, F, ..., A, B, ... 
+  
+  which(to_populate_3$symbol_from == where_to_start) -> stored_start 
+  
+  reorder_to_populate_3 <- c(to_populate_3$symbol_from[stored_start:length(to_populate_3$symbol_from)], 
+                             to_populate_3$symbol_from[1:(stored_start-1)])
+  
+  # checking lengths stores the length of the list that comes back from the API request 
+  # as soon as the list is empty, we stop the loop 
+  # we store the last symbol
+  # and we process the results that we have 
+  
+  checking_length = 1 # this just must be non zero 
+  counter = 1 # this is count how many assets we can update 
+  
+  i = stored_start
+  
+  while(checking_length != 0){
+    
+    
     # progress printed to my console only on my local machine 
     if(file.exists("keys.R")){
-     if(i %% 100 == 0){print(paste0("Iteration ", i, " of ", length(populate_list)))}
+     if(counter %% 100 == 0){print(paste0("Iteration ", counter))}
     }
     
-    # this ensures that only pull a small slice of the data from the API 
-    
-    
+    # smart~~er way to identify how much to request from API to 
+    # shuffle less data around 
     new_days_to_pull_i <- ifelse(
       !(to_populate_3$symbol_from[i] %in% old_coins_data$symbol_from), 
       
@@ -285,7 +332,6 @@ cat("
       ) 
     )
     
-    # get the data 
     api_request(
       FSYM = to_populate_3$symbol_from[i], 
       TSYM = to_populate_3$symbol_to[i], 
@@ -294,9 +340,10 @@ cat("
       LIMIT = new_days_to_pull_i
     ) -> api_results_f_output
     
-    # if data exists, turn output of previous function, 
-    # which is a list, to a data frame and store the results 
-    if(length(api_results_f_output) != 0){
+    checking_length = length(api_results_f_output)
+    
+    if(checking_length != 0){
+      ### make data into a data frame 
       process_api_request(API_DATA_RESULT = api_results_f_output) -> raw_data_iter
       cols2 <- c('timestamp',  'close',   'high',    'low',   'open', 'volumefrom', 'volumeto')
       
@@ -314,21 +361,42 @@ cat("
             datetime > max(old_coins_data[old_coins_data$symbol_from == to_populate_3$symbol_from[i], ]$datetime)
         )
       }
-      
-      populate_list[[i]] = historical_df
+          
+      populate_list[[counter]] = historical_df
     }
+    ### end loop 
+    counter = counter + 1
+    i = i + 1
+    if(i > length(reorder_to_populate_3)){i=1}
   }
   
+  where_ended <- to_populate_3$symbol_from[i]
+  
+  print(paste0("Collected data for ", prettyNum(counter, big.mark = ","),  " coins"))
+  print(paste0("Started with ", where_to_start))
+  print(paste0("Ended on ", where_ended))
+  
+  write.csv(data.frame(last_symbol = where_ended), 
+                "where to start.csv")
+  
+  if(file.exists('keys.R') == F){
+    put_object(file = "where to start.csv", 
+               object = "where to start.csv",
+               bucket = Sys.getenv("bucket_name"))
+  }else{
+    put_object(file = "where to start.csv", 
+               object = "where to start.csv",
+               bucket = bucket_name)   
+  }
+    
+  unlink("where to start.csv")
+  
   print(paste0("New rows of raw data added to the historical data set: ", prettyNum(nrow(bind_rows(populate_list) %>% distinct()), big.mark = ",")))
-  print(paste0("Data was supposed to be collected for ", prettyNum(length(populate_list), big.mark = ","), " assets "))
+  print(paste0("Data could to be collected for ", prettyNum(length(populate_list), big.mark = ","), " assets "))
   print(paste0("Data was actually obtained for ", prettyNum(lapply(populate_list, nrow) %>% unlist() %>% length(), 
                                                             big.mark = ","), " assets"))
   
   ## turn populate_list into a data frame and append to the old_coins data 
-  
-  new_data <- bind_rows(populate_list)
-  new_data$datetime <- as.Date(new_data$datetime, format="%Y-%m-%d")
-  
   cat("
       *******************************
                 PART 5 
@@ -339,15 +407,24 @@ cat("
     
   # some clearing: there is no easy way to convert EUR and other real currencies to 
   # USD that is easy. So, I am willing to discard these data 
+  new_data <- bind_rows(populate_list)
   new_data <- new_data %>% filter(!(symbol_to %in% c("EUR", "JPY", "AUD")))
+  #### old data has more column than the data that I have processed here 
+  # combine the data first and then start doing the chained price conversions 
   
-  prettyNum(nrow(new_data), big.mark = ",")
-  prettyNum(length(unique(new_data$symbol_from)), big.mark = ",")
+  new_data$datetime <- as.Date(new_data$datetime, format="%Y-%m-%d")
+  old_coins_data$datetime <- as.Date(old_coins_data$datetime, format="%Y-%m-%d")
+  
+  working_data <- 
+    rbind(old_coins_data %>% select(all_of(colnames(new_data))), 
+          new_data) %>% 
+    arrange(symbol_from, datetime)
+  
+  working_data <- working_data %>% distinct()
   
   # these are all options of cryptos to convert into from some crypto 
-  new_data %>% 
+  working_data %>% 
     select(symbol_to) %>% unique() %>% unlist() -> symbol_to_options 
-  
   # remove USD, because that is the final destination 
   symbol_to_options <- symbol_to_options[symbol_to_options != "USD"]
   
@@ -361,14 +438,13 @@ cat("
     
     while(curr != "USD"){
       
-      new_data %>% filter(symbol_from == curr) %>% select(symbol_to) %>% unique() %>% unlist() -> curr
+      working_data %>% filter(symbol_from == curr) %>% select(symbol_to) %>% unique() %>% unlist() -> curr
       iter_res <- c(iter_res, curr)
       
     }
     
     names(iter_res) = paste0("to_",1:length(iter_res))
     results[[i]] = iter_res
-    
   }
   
   ### these are all chains of conversion that eventually ends up in the US dollar. 
@@ -381,9 +457,9 @@ cat("
   if(T == F){
     options(scipen = 999)
     rbind(
-      new_data %>% filter(symbol_to == "DOGE") %>% head(1),
-      new_data %>% filter(symbol_from == "DOGE") %>% head(1),
-      new_data %>% filter(symbol_from == "BTC") %>% head(1)
+      working_data %>% filter(symbol_to == "DOGE") %>% head(1),
+      working_data %>% filter(symbol_from == "DOGE") %>% head(1),
+      working_data %>% filter(symbol_from == "BTC") %>% head(1)
     ) %>% 
       mutate(price = round(price, 6))
   }
@@ -408,7 +484,7 @@ cat("
     
     for( j in 1:loop_over_N   ){
       
-      new_data %>% filter(symbol_from == bind_rows(results)[i, j] %>% unlist() & 
+      working_data %>% filter(symbol_from == bind_rows(results)[i, j] %>% unlist() & 
                                         symbol_to == bind_rows(results)[i, (j + 1)]  %>% unlist()
                                       ) %>% 
         select(datetime, price) -> iter_df
@@ -450,16 +526,25 @@ cat("
   ###############################
   
   # final data set 
-  new_data <- 
+  
+  working_data2 <- 
     left_join(
-      new_data, 
-      final_conversions_df %>% rename(symbol_to = conversion_from ), 
+      x = working_data %>% distinct(), 
+      y = final_conversions_df %>% rename(symbol_to = conversion_from ) %>% distinct(), 
       
       by = c("symbol_to", "datetime")
-    )
+    ) %>% 
+    arrange(symbol_from, symbol_to, datetime, volumefrom) %>% 
+    group_by(symbol_from, symbol_to, datetime) %>% 
+    slice_tail(n = 1) %>% 
+    ungroup()
+  
+  prettyNum(nrow(working_data), big.mark = ",")
+  prettyNum(nrow(working_data2 %>% distinct()), big.mark = ",")
+  
   ## 
-  new_data <- 
-    new_data %>% 
+  working_data2 <- 
+    working_data2 %>% 
     mutate(
       usd_price_final = ifelse(symbol_to == "USD", 
                          price, 
@@ -470,44 +555,12 @@ cat("
     na.omit() %>% 
     filter(symbol_from != "WBTC")
   
-    prettyNum(nrow(new_data), big.mark = ",")
-    prettyNum(length(unique(new_data$symbol_from)), big.mark = ",")
+    prettyNum(nrow(working_data2), big.mark = ",")
+    prettyNum(length(unique(working_data2$symbol_from)), big.mark = ",")
   
   
 ####################
-
-  #######
-  # one time save of the data since I know I got it right 
-  if(T == F){
-    # one time back up of the data set 
-    
-    f_name = paste0(
-      "all coins historical data_", 
-      year(Sys.Date()), 
-      "_", 
-      month(Sys.Date()), 
-      "_", 
-      day(Sys.Date()), 
-      ".csv"
-    )
-    
-    write.csv(major_historical_df4, f_name)
-    
-    put_object(file = f_name, 
-               object = f_name,
-               bucket = bucket_name)
-    
-    unlink(f_name) 
-  }
-  
-  
-  
-  old_coins_data$datetime <- as.Date(old_coins_data$datetime, format="%Y-%m-%d")
-  
-  major_historical_df3 <- rbind(old_coins_data, new_data)
-  major_historical_df3$datetime <- as.Date(major_historical_df3$datetime, format="%Y-%m-%d")
-  
-  write.csv(major_historical_df3, "all coins historical data.csv")
+  write.csv(working_data2, "all coins historical data.csv")
   
   if(file.exists('keys.R') == F){
     put_object(file = "all coins historical data.csv", 
@@ -521,6 +574,6 @@ cat("
   
   unlink("all coins historical data.csv")
 
-}
+
 
   
