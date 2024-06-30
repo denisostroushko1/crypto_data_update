@@ -1,6 +1,6 @@
 on:
   schedule:
-    - cron:  '0 10 * * *' # every day at midnight
+    - cron:  '0 * * * *' # every hour at minute zero 
   push:
     branches: main
   workflow_dispatch:
