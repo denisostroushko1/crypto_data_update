@@ -39,6 +39,7 @@ cat("
       ***********************************
                  
                   PART 1
+                  
       ***********************************
       ")
 
@@ -107,6 +108,170 @@ for(i in 1:nrow(to_pull)){
   }
 }
 
+# ********************************************************************************
+# ********************************************************************************
+
+# collect hourly data for BTC, ETH
+cat("
+      ***********************************
+                 
+                  PART 2
+                  
+      ***********************************
+      ")
+
+#### eth 
+
+url <- "https://min-api.cryptocompare.com/data/v2/histohour"
+
+params <- list(
+  fsym = "ETH",
+  tsym = "USDT",
+  e = "Binance", 
+  aggregate = 1,
+  limit = 2000
+)
+  
+# Make GET request to the API
+response <- GET(url, query = params)
+data <- content(response, "parsed")
+historical_data <- data$Data$Data
+
+historical_df <- as.data.frame(historical_data %>% bind_rows())
+
+historical_df$timestamp <- as.POSIXct(historical_df$time %>% unlist(), origin = "1970-01-01", tz = "UTC")
+
+historical_df <- 
+  historical_df %>% 
+  select(time, timestamp, close, high, low, open) %>% 
+  rename(unix = time)
+
+tempfile_15 <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
+save_object(object = "s3://crypto-data-shiny/hourly ETH.csv", file = tempfile_15)
+
+df <- read.csv(tempfile_15)[,-1]
+df$check <- sapply(X = df$timestamp, FUN = nchar)
+
+df <- 
+  df %>% 
+  mutate(
+    timestamp = ifelse(check == 10, 
+                       paste0(timestamp, " 00:00:00"), 
+                       timestamp)
+  ) %>% 
+  select(-check) %>% 
+  mutate(
+    timestamp2 = as.POSIXct(timestamp, format="%Y-%m-%d %H:%M:%S")
+  ) %>% 
+  na.omit()
+
+historical_df_f <- 
+  historical_df %>% 
+  filter(timestamp > max(df$timestamp) ) 
+
+upload_eth <- 
+  rbind(df %>% 
+          select(-timestamp) %>% 
+          rename(timestamp = timestamp2), 
+        historical_df_f) %>% 
+  arrange(timestamp)
+
+write.csv(upload_eth, "hourly ETH.csv")
+
+if(file.exists('keys.R') == F){
+  put_object(file = "hourly ETH.csv", 
+             object = "hourly ETH.csv",
+             bucket = Sys.getenv("bucket_name"))
+}else{
+  put_object(file = "hourly ETH.csv", 
+             object = "hourly ETH.csv",
+             bucket = bucket_name)   
+}
+
+unlink("hourly ETH.csv")
+
+#### BTC 
+
+url <- "https://min-api.cryptocompare.com/data/v2/histohour"
+
+params <- list(
+  fsym = "BTC",
+  tsym = "USDT",
+  e = "Binance", 
+  aggregate = 1,
+  limit = 2000
+)
+  
+# Make GET request to the API
+response <- GET(url, query = params)
+data <- content(response, "parsed")
+historical_data <- data$Data$Data
+
+historical_df <- as.data.frame(historical_data %>% bind_rows())
+
+historical_df$timestamp <- as.POSIXct(historical_df$time %>% unlist(), origin = "1970-01-01", tz = "UTC")
+
+historical_df <- 
+  historical_df %>% 
+  select(time, timestamp, close, high, low, open) %>% 
+  rename(unix = time)
+
+tempfile_15 <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
+save_object(object = "s3://crypto-data-shiny/hourly BTC.csv", file = tempfile_15)
+
+df <- read.csv(tempfile_15)[,-1]
+df$check <- sapply(X = df$timestamp, FUN = nchar)
+
+df <- 
+  df %>% 
+  mutate(
+    timestamp = ifelse(check == 10, 
+                       paste0(timestamp, " 00:00:00"), 
+                       timestamp)
+  ) %>% 
+  select(-check) %>% 
+  mutate(
+    timestamp2 = as.POSIXct(timestamp, format="%Y-%m-%d %H:%M:%S")
+  ) %>% 
+  na.omit()
+
+historical_df_f <- 
+  historical_df %>% 
+  filter(timestamp > max(df$timestamp) ) 
+
+upload_btc <- 
+  rbind(df %>% 
+          select(-timestamp) %>% 
+          rename(timestamp = timestamp2), 
+        historical_df_f) %>% 
+  arrange(timestamp)
+
+write.csv(upload_eth, "hourly BTC.csv")
+
+if(file.exists('keys.R') == F){
+  put_object(file = "hourly BTC.csv", 
+             object = "hourly BTC.csv",
+             bucket = Sys.getenv("bucket_name"))
+}else{
+  put_object(file = "hourly BTC.csv", 
+             object = "hourly BTC.csv",
+             bucket = bucket_name)   
+}
+
+unlink("hourly BTC.csv")
+
+
+# ********************************************************************************
+# ********************************************************************************
+
+cat("
+      ***********************************
+                 
+                  PART 3
+                  
+      ***********************************
+      ")
+
 ##########################################################################
 # collect CoinMarkterCap data for general use and new concept development 
 
@@ -120,16 +285,6 @@ save_object(object = obj, file = tempfile_15)
 print(paste0("Saved: ", obj))
 
 df <- read.csv(tempfile_15)[,-1]
-
-# ********************************************************************************
-# ********************************************************************************
-
-cat("
-      ***********************************
-                 
-                  PART 2
-      ***********************************
-      ")
 
 ###### 
 # identify new data to pull 
@@ -180,7 +335,8 @@ if(length(dates_to_collect) != 0){
 cat("
       ***********************************
                  
-                  PART 3
+                  PART 4
+                  
       ***********************************
       ")
 
@@ -249,7 +405,8 @@ if(wday(Sys.Date(), week_start = 1) == WEEK_DAY_FOR_UPDATE){
 cat("
       ***********************************
                  
-                  PART 4 
+                  PART 5
+                  
       ***********************************
       ")
   
@@ -399,7 +556,7 @@ cat("
   ## turn populate_list into a data frame and append to the old_coins data 
   cat("
       *******************************
-                PART 5 
+                PART 6 
       *******************************
       
       ")
@@ -407,173 +564,175 @@ cat("
     
   # some clearing: there is no easy way to convert EUR and other real currencies to 
   # USD that is easy. So, I am willing to discard these data 
-  new_data <- bind_rows(populate_list)
-  new_data <- new_data %>% filter(!(symbol_to %in% c("EUR", "JPY", "AUD")))
-  #### old data has more column than the data that I have processed here 
-  # combine the data first and then start doing the chained price conversions 
+  new_data2 <- bind_rows(populate_list)
+  new_data <- new_data2 %>% filter(!(symbol_to %in% c("EUR", "JPY", "AUD")))
   
-  new_data$datetime <- as.Date(new_data$datetime, format="%Y-%m-%d")
-  old_coins_data$datetime <- as.Date(old_coins_data$datetime, format="%Y-%m-%d")
   
-  working_data <- 
-    rbind(old_coins_data %>% select(all_of(colnames(new_data))), 
-          new_data) %>% 
-    arrange(symbol_from, datetime)
-  
-  working_data <- working_data %>% distinct()
-  
-  # these are all options of cryptos to convert into from some crypto 
-  working_data %>% 
-    select(symbol_to) %>% unique() %>% unlist() -> symbol_to_options 
-  # remove USD, because that is the final destination 
-  symbol_to_options <- symbol_to_options[symbol_to_options != "USD"]
-  
-  # collect chains of conversion through cryptos until we reach USD 
-  results <- vector(mode = "list", length = length(symbol_to_options))
-  
-  for(i in 1:length(symbol_to_options)){
+  if(nrow(new_data) != 0){#### old data has more column than the data that I have processed here 
+    # combine the data first and then start doing the chained price conversions 
     
-    curr = symbol_to_options[i]
-    iter_res = c(curr)
+    new_data$datetime <- as.Date(new_data$datetime, format="%Y-%m-%d")
+    old_coins_data$datetime <- as.Date(old_coins_data$datetime, format="%Y-%m-%d")
     
-    while(curr != "USD"){
+    working_data <- 
+      rbind(old_coins_data %>% select(all_of(colnames(new_data))), 
+            new_data) %>% 
+      arrange(symbol_from, datetime)
+    
+    working_data <- working_data %>% distinct()
+    
+    # these are all options of cryptos to convert into from some crypto 
+    working_data %>% 
+      select(symbol_to) %>% unique() %>% unlist() -> symbol_to_options 
+    # remove USD, because that is the final destination 
+    symbol_to_options <- symbol_to_options[symbol_to_options != "USD"]
+    
+    # collect chains of conversion through cryptos until we reach USD 
+    results <- vector(mode = "list", length = length(symbol_to_options))
+    
+    for(i in 1:length(symbol_to_options)){
       
-      working_data %>% filter(symbol_from == curr) %>% select(symbol_to) %>% unique() %>% unlist() -> curr
-      iter_res <- c(iter_res, curr)
+      curr = symbol_to_options[i]
+      iter_res = c(curr)
+      
+      while(curr != "USD"){
+        
+        working_data %>% filter(symbol_from == curr) %>% select(symbol_to) %>% unique() %>% unlist() -> curr
+        iter_res <- c(iter_res, curr)
+        
+      }
+      
+      names(iter_res) = paste0("to_",1:length(iter_res))
+      results[[i]] = iter_res
+    }
+    
+    ### these are all chains of conversion that eventually ends up in the US dollar. 
+    ### it just so happens that they end up in USD, I expect that perhaps some will eventually
+    ### end up in the USDT or something like that 
+    
+     ############################################################################################
+    
+    ## EXAMPLE OF A CONVERSION CHAIN 
+    if(T == F){
+      options(scipen = 999)
+      rbind(
+        working_data %>% filter(symbol_to == "DOGE") %>% head(1),
+        working_data %>% filter(symbol_from == "DOGE") %>% head(1),
+        working_data %>% filter(symbol_from == "BTC") %>% head(1)
+      ) %>% 
+        mutate(price = round(price, 6))
+    }
+    
+    #### each entry in a list is a chain of conversion 
+    #### each sub entry is a step within a chain 
+    
+    #   bind_rows(results)
+    
+    conversion_res <- vector(mode = "list", length = nrow(bind_rows(results)))
+    
+    for(i in 1:nrow(bind_rows(results))    ){
+    
+      # bind_rows(results)[i, ]
+      
+      bind_rows(results)[i, ] %>% apply(., 1, function(x){sum(is.na(x))}) -> na_entries 
+      bind_rows(results)[i, ] %>% length() -> total_length
+      
+      loop_over_N = total_length - na_entries - 1 # take away one because one of the entries is the final destination 
+      
+      conversion_res[[i]] <- vector(mode = "list", length = loop_over_N)
+      
+      for( j in 1:loop_over_N   ){
+        
+        working_data %>% filter(symbol_from == bind_rows(results)[i, j] %>% unlist() & 
+                                          symbol_to == bind_rows(results)[i, (j + 1)]  %>% unlist()
+                                        ) %>% 
+          select(datetime, price) -> iter_df
+        
+        iter_df$datetime <- as.Date(iter_df$datetime)
+        
+        if(j == 1){iter_df <- iter_df %>% mutate(conversion_from = bind_rows(results)[i, 1] %>% unlist()) %>% select(conversion_from, datetime, price)}
+        
+        conversion_res[[i]][[j]] <- iter_df
+      }
       
     }
     
-    names(iter_res) = paste0("to_",1:length(iter_res))
-    results[[i]] = iter_res
-  }
-  
-  ### these are all chains of conversion that eventually ends up in the US dollar. 
-  ### it just so happens that they end up in USD, I expect that perhaps some will eventually
-  ### end up in the USDT or something like that 
-  
-   ############################################################################################
-  
-  ## EXAMPLE OF A CONVERSION CHAIN 
-  if(T == F){
-    options(scipen = 999)
-    rbind(
-      working_data %>% filter(symbol_to == "DOGE") %>% head(1),
-      working_data %>% filter(symbol_from == "DOGE") %>% head(1),
-      working_data %>% filter(symbol_from == "BTC") %>% head(1)
-    ) %>% 
-      mutate(price = round(price, 6))
-  }
-  
-  #### each entry in a list is a chain of conversion 
-  #### each sub entry is a step within a chain 
-  
-  #   bind_rows(results)
-  
-  conversion_res <- vector(mode = "list", length = nrow(bind_rows(results)))
-  
-  for(i in 1:nrow(bind_rows(results))    ){
-  
-    # bind_rows(results)[i, ]
+    #### process the results 
+    to_usd_results <- vector(mode = "list", length = length(conversion_res))
     
-    bind_rows(results)[i, ] %>% apply(., 1, function(x){sum(is.na(x))}) -> na_entries 
-    bind_rows(results)[i, ] %>% length() -> total_length
+    for(i in 1:length(to_usd_results)){
     
-    loop_over_N = total_length - na_entries - 1 # take away one because one of the entries is the final destination 
-    
-    conversion_res[[i]] <- vector(mode = "list", length = loop_over_N)
-    
-    for( j in 1:loop_over_N   ){
+      # join all steps of conversion on a day 
+      reduce(conversion_res[[i]], full_join, by = "datetime") -> all_res_i
       
-      working_data %>% filter(symbol_from == bind_rows(results)[i, j] %>% unlist() & 
-                                        symbol_to == bind_rows(results)[i, (j + 1)]  %>% unlist()
-                                      ) %>% 
-        select(datetime, price) -> iter_df
+      # identify and multiply all 'prices' columns 
+      which(substr(colnames(all_res_i), 1, 5) == "price") -> price_cols_id
+      colnames(all_res_i)[price_cols_id] -> price_cols
       
-      iter_df$datetime <- as.Date(iter_df$datetime)
+      all_res_i %>% 
+        select(all_of(price_cols)) %>% 
+        apply(., 1, function(x){prod(x)}) -> usd_price
       
-      if(j == 1){iter_df <- iter_df %>% mutate(conversion_from = bind_rows(results)[i, 1] %>% unlist()) %>% select(conversion_from, datetime, price)}
+      all_res_i$usd_price <- usd_price
       
-      conversion_res[[i]][[j]] <- iter_df
+      all_res_i <- all_res_i %>% select(conversion_from, datetime, usd_price)
+        
+      to_usd_results[[i]] <- all_res_i
     }
     
-  }
-  
-  #### process the results 
-  to_usd_results <- vector(mode = "list", length = length(conversion_res))
-  
-  for(i in 1:length(to_usd_results)){
-  
-    # join all steps of conversion on a day 
-    reduce(conversion_res[[i]], full_join, by = "datetime") -> all_res_i
+    final_conversions_df <- bind_rows(to_usd_results)
     
-    # identify and multiply all 'prices' columns 
-    which(substr(colnames(all_res_i), 1, 5) == "price") -> price_cols_id
-    colnames(all_res_i)[price_cols_id] -> price_cols
+    ###############################
     
-    all_res_i %>% 
-      select(all_of(price_cols)) %>% 
-      apply(., 1, function(x){prod(x)}) -> usd_price
+    # final data set 
     
-    all_res_i$usd_price <- usd_price
+    working_data2 <- 
+      left_join(
+        x = working_data %>% distinct(), 
+        y = final_conversions_df %>% rename(symbol_to = conversion_from ) %>% distinct(), 
+        
+        by = c("symbol_to", "datetime")
+      ) %>% 
+      arrange(symbol_from, symbol_to, datetime, volumefrom) %>% 
+      group_by(symbol_from, symbol_to, datetime) %>% 
+      slice_tail(n = 1) %>% 
+      ungroup()
     
-    all_res_i <- all_res_i %>% select(conversion_from, datetime, usd_price)
-      
-    to_usd_results[[i]] <- all_res_i
-  }
-  
-  final_conversions_df <- bind_rows(to_usd_results)
-  
-  ###############################
-  
-  # final data set 
-  
-  working_data2 <- 
-    left_join(
-      x = working_data %>% distinct(), 
-      y = final_conversions_df %>% rename(symbol_to = conversion_from ) %>% distinct(), 
-      
-      by = c("symbol_to", "datetime")
-    ) %>% 
-    arrange(symbol_from, symbol_to, datetime, volumefrom) %>% 
-    group_by(symbol_from, symbol_to, datetime) %>% 
-    slice_tail(n = 1) %>% 
-    ungroup()
-  
-  prettyNum(nrow(working_data), big.mark = ",")
-  prettyNum(nrow(working_data2 %>% distinct()), big.mark = ",")
-  
-  ## 
-  working_data2 <- 
-    working_data2 %>% 
-    mutate(
-      usd_price_final = ifelse(symbol_to == "USD", 
-                         price, 
-                         price * usd_price)
-    ) %>% 
-    select(-usd_price) %>% 
-    rename(usd_price = usd_price_final) %>% 
-    na.omit() %>% 
-    filter(symbol_from != "WBTC")
-  
-    prettyNum(nrow(working_data2), big.mark = ",")
-    prettyNum(length(unique(working_data2$symbol_from)), big.mark = ",")
-  
-  
-####################
-  write.csv(working_data2, "all coins historical data.csv")
-  
-  if(file.exists('keys.R') == F){
-    put_object(file = "all coins historical data.csv", 
-               object = "all coins historical data.csv",
-               bucket = Sys.getenv("bucket_name"))
-  }else{
-    put_object(file = "all coins historical data.csv", 
-               object = "all coins historical data.csv",
-               bucket = bucket_name)   
-  }
-  
-  unlink("all coins historical data.csv")
-
+    prettyNum(nrow(working_data), big.mark = ",")
+    prettyNum(nrow(working_data2 %>% distinct()), big.mark = ",")
+    
+    ## 
+    working_data2 <- 
+      working_data2 %>% 
+      mutate(
+        usd_price_final = ifelse(symbol_to == "USD", 
+                           price, 
+                           price * usd_price)
+      ) %>% 
+      select(-usd_price) %>% 
+      rename(usd_price = usd_price_final) %>% 
+      na.omit() %>% 
+      filter(symbol_from != "WBTC")
+    
+      prettyNum(nrow(working_data2), big.mark = ",")
+      prettyNum(length(unique(working_data2$symbol_from)), big.mark = ",")
+    
+    
+  ####################
+    write.csv(working_data2, "all coins historical data.csv")
+    
+    if(file.exists('keys.R') == F){
+      put_object(file = "all coins historical data.csv", 
+                 object = "all coins historical data.csv",
+                 bucket = Sys.getenv("bucket_name"))
+    }else{
+      put_object(file = "all coins historical data.csv", 
+                 object = "all coins historical data.csv",
+                 bucket = bucket_name)   
+    }
+    
+    unlink("all coins historical data.csv")
+}
 
 
   
