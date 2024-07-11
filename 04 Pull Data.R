@@ -246,7 +246,7 @@ upload_btc <-
         historical_df_f) %>% 
   arrange(timestamp)
 
-write.csv(upload_eth, "hourly BTC.csv")
+write.csv(upload_btc, "hourly BTC.csv")
 
 if(file.exists('keys.R') == F){
   put_object(file = "hourly BTC.csv", 
