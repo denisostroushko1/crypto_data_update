@@ -565,11 +565,12 @@ cat("
   # some clearing: there is no easy way to convert EUR and other real currencies to 
   # USD that is easy. So, I am willing to discard these data 
   new_data2 <- bind_rows(populate_list)
-  print(new_data2)
-  
+
   if("symbol_to" %in% colnames(new_data2)){
     new_data <- new_data2 %>% filter(!(symbol_to %in% c("EUR", "JPY", "AUD")))
   }
+  
+  new_data <- new_data2
   
   if(nrow(new_data) != 0){#### old data has more column than the data that I have processed here 
     # combine the data first and then start doing the chained price conversions 
