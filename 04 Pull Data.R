@@ -576,6 +576,8 @@ cat("
     # combine the data first and then start doing the chained price conversions 
     
     new_data$datetime <- as.Date(new_data$datetime, format="%Y-%m-%d")
+    new_data$insert_datetime = Sys.time()
+    
     old_coins_data$datetime <- as.Date(old_coins_data$datetime, format="%Y-%m-%d")
     
     working_data <- 
@@ -737,6 +739,5 @@ cat("
     
     unlink("all coins historical data.csv")
 }
-
 
   
