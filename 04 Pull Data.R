@@ -565,6 +565,8 @@ cat("
   # some clearing: there is no easy way to convert EUR and other real currencies to 
   # USD that is easy. So, I am willing to discard these data 
   new_data2 <- bind_rows(populate_list)
+  print(new_data2)
+  
   if("symbol_to" %in% colnames(new_data2)){
     new_data <- new_data2 %>% filter(!(symbol_to %in% c("EUR", "JPY", "AUD")))
   }
