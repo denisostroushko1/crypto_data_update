@@ -27,6 +27,7 @@ jobs:
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
             packages:
+              textshaping@0.3.7
               curl@5.2.1
               renv@1.0.3
               devtools@2.4.4
