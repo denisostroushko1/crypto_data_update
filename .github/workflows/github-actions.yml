@@ -30,7 +30,7 @@ jobs:
               textshaping@0.3.7
               curl@5.2.1
               renv@1.0.3
-              devtools@2.4.4
+              any::devtools
               tidyverse@1.3.2
               lubridate@1.9.3
               aws.s3@0.3.20
