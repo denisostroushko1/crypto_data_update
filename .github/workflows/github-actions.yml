@@ -27,13 +27,13 @@ jobs:
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
             packages:
-              textshaping@0.3.7
-              curl@5.2.1
+              any::textshaping
+              any::curl
               any::renv
               any::devtools
-              tidyverse@1.3.2
-              lubridate@1.9.3
-              aws.s3@0.3.20
+              any::tidyverse
+              any::lubridate
+              any::aws.s3
               any::httr
               any::rlang
               any::secret
