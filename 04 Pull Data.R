@@ -84,6 +84,10 @@ for(i in 1:nrow(to_pull)){
       rename(datetime = timestamp, 
              price = close)
   
+    ####
+    # since we update once an hour I want to have the most recent data on the day 
+    df <- df %>% filter(datetime < max(historical_df$datetime))
+    
     historical_df %>% 
       filter(datetime > max(df$datetime)) %>% 
       
