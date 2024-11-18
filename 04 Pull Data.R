@@ -447,8 +447,8 @@ cat("
   tempfile_15 <- tempfile() 
   obj =  paste0("s3://crypto-data-shiny/", 'where to start.csv')
   save_object(object = obj, file = tempfile_15)
-  where_to_start <- read.csv(tempfile_15)[,-1]
-  where_to_start <- paste0(where_to_start)
+  where_to_start <- read.csv(tempfile_15)[,-1] %>% unlist()
+ #  where_to_start <- paste0(where_to_start)
   
   # old version of the update used a sorted list and stopped working at around the 
   # same spot 
@@ -457,14 +457,19 @@ cat("
   # now, we want to reorder the list such that if we break at D 
   # then the next update is D, E, F, ..., A, B, ... 
   
-  which(to_populate_3$symbol_from == where_to_start) -> stored_start 
   
+  which(to_populate_3$symbol_from == where_to_start) -> stored_start 
+    
   if(length(stored_start) == 0){
-    stored_start <- sample(to_populate_3$symbol_from, size = 1)
+    where_to_start <- sample(to_populate_3$symbol_from, size = 1)
+    which(to_populate_3$symbol_from == where_to_start) -> stored_start 
   }
   
-  reorder_to_populate_3 <- c(to_populate_3$symbol_from[stored_start:length(to_populate_3$symbol_from)], 
-                             to_populate_3$symbol_from[1:(stored_start-1)])
+  reorder_to_populate_3 <- 
+    c(
+      to_populate_3$symbol_from[stored_start:length(to_populate_3$symbol_from)], 
+      to_populate_3$symbol_from[1:(stored_start-1)]
+      )
   
   # checking lengths stores the length of the list that comes back from the API request 
   # as soon as the list is empty, we stop the loop 
@@ -559,7 +564,7 @@ cat("
   unlink("where to start.csv")
   
   print(paste0("New rows of raw data added to the historical data set: ", prettyNum(nrow(bind_rows(populate_list) %>% distinct()), big.mark = ",")))
-  print(paste0("Data could to be collected for ", prettyNum(length(populate_list), big.mark = ","), " assets "))
+  print(paste0("Data could be collected for ", prettyNum(length(populate_list), big.mark = ","), " assets "))
   print(paste0("Data was actually obtained for ", prettyNum(lapply(populate_list, nrow) %>% unlist() %>% length(), 
                                                             big.mark = ","), " assets"))
   
