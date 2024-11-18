@@ -448,6 +448,8 @@ cat("
   obj =  paste0("s3://crypto-data-shiny/", 'where to start.csv')
   save_object(object = obj, file = tempfile_15)
   where_to_start <- read.csv(tempfile_15)[,-1]
+  where_to_start <- paste0(where_to_start)
+  
   # old version of the update used a sorted list and stopped working at around the 
   # same spot 
   # such as A, B, C, D, E, F, ... and it would break at C or D 
@@ -456,6 +458,10 @@ cat("
   # then the next update is D, E, F, ..., A, B, ... 
   
   which(to_populate_3$symbol_from == where_to_start) -> stored_start 
+  
+  if(length(stored_start) == 0){
+    stored_start <- sample(to_populate_3$symbol_from, size = 1)
+  }
   
   reorder_to_populate_3 <- c(to_populate_3$symbol_from[stored_start:length(to_populate_3$symbol_from)], 
                              to_populate_3$symbol_from[1:(stored_start-1)])
