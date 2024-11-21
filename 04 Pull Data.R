@@ -115,6 +115,8 @@ for(i in 1:nrow(to_pull)){
 # ********************************************************************************
 # ********************************************************************************
 
+## https://www.cryptodatadownload.com/data/poloniex/
+
 # collect hourly data for BTC, ETH
 cat("
       ***********************************
@@ -147,7 +149,8 @@ historical_df$timestamp <- as.POSIXct(historical_df$time %>% unlist(), origin = 
 
 historical_df <- 
   historical_df %>% 
-  select(time, timestamp, close, high, low, open) %>% 
+  # select(time, timestamp, close, high, low, open) %>% 
+  select(-conversionType, -conversionSymbol) %>% 
   rename(unix = time)
 
 tempfile_15 <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e
@@ -217,7 +220,8 @@ historical_df$timestamp <- as.POSIXct(historical_df$time %>% unlist(), origin = 
 
 historical_df <- 
   historical_df %>% 
-  select(time, timestamp, close, high, low, open) %>% 
+  # select(time, timestamp, close, high, low, open) %>% 
+  select(-conversionType, -conversionSymbol) %>% 
   rename(unix = time)
 
 tempfile_15 <- tempfile()  # temp filepath like /var/folders/vq/km5xms9179s_6vhpw5jxfrth0000gn/T//RtmpKgMGfZ/file4c6e2cfde13e

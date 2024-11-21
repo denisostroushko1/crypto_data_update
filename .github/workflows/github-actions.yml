@@ -51,9 +51,20 @@ jobs:
             
         run: |
             Rscript 04\ Pull\ Data.R
+      
+      - name: Render document
+        uses: quarto-dev/quarto-actions/render@v2
+        with:
+          to: gfm
+          path: README.qmd
           
       - name: Setup git config
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
           
+      - name: Commit
+        run: |
+          git add .
+          git commit -m "Updated report"
+          git push origin main
