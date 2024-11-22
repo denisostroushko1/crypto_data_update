@@ -337,13 +337,125 @@ if(length(dates_to_collect) != 0){
 
 }
 
+cat("
+    *************************************
+    
+                  MARKET CAPS 
+    
+    *************************************
+    "
+)
+
+    cat("
+        ETH MARKET CAP 
+        ")
+    
+    ######################
+    # ETHEREUM MARKET CAP 
+    csv_url <- "https://etherscan.io/chart/marketcap?output=csv"
+    # Define the local file path to save the CSV
+    output_file <- "marketcap.csv"
+    
+    # Download the CSV file
+    download.file(url = csv_url, destfile = output_file, mode = "wb")
+    eth_mc <- read_csv(output_file) %>% 
+      rename(datetime = `Date(UTC)`) %>% 
+      mutate(market_cap = Supply*Price,
+             datetime = as.Date(datetime, format = "%m/%d/%Y")) %>% 
+      select(datetime, market_cap) %>% 
+      rename(price = market_cap)
+      
+    unlink(output_file)
+    
+    save_object(object = "s3://crypto-data-shiny/ETH MC.csv", file = tempfile_15)
+    old_eth_mc <- read.csv(tempfile_15)[,-1]
+    
+    eth_mc <- 
+      rbind(old_eth_mc, 
+            eth_mc %>% filter(datetime > max(old_eth_mc$datetime))
+            )
+    write.csv(eth_mc, "ETH MC.csv")
+    
+    if(file.exists('keys.R') == F){
+      put_object(file = "ETH MC.csv", 
+                 object = "ETH MC.csv",
+                 bucket = Sys.getenv("bucket_name"))
+    }else{
+      put_object(file = "ETH MC.csv", 
+                 object = "ETH MC.csv",
+                 bucket = bucket_name)   
+    }
+    
+    unlink("ETH MC.csv")
+
+## *************** ## 
+  if(file.exists("keys.R") == T){
+    
+    cat("
+        TOTAL MARKET CAP 
+        ")
+      
+    work_df <- read_csv("CoinGecko-GlobalCryptoMktCap.csv")
+    work_df <- work_df %>% 
+      mutate(timestamp = as.POSIXct((work_df$snapped_at %>% unlist())/1000, origin = "1970-01-01", tz = "UTC"), 
+             timestamp = as.Date(timestamp)) %>% 
+      select(-total_volume, -snapped_at) %>%
+      rename(price = market_cap)
+    
+    ## https://www.coingecko.com/en/global-charts
+    put_object(file = "CoinGecko-GlobalCryptoMktCap.csv", 
+               object = "TOTAL MC.csv",
+               bucket = bucket_name)   
+    
+  }
+    
+    
+## *************** ## 
+    
+cat("
+      ***********************************
+                 
+                  PART 4
+                  
+      ***********************************
+      ")
+  
+## FEAR AND GREED INDEX 
+GET('https://api.alternative.me/fng/?limit=999999') %>% paste0() %>% fromJSON() -> res
+
+f_data <- 
+  res$data %>% 
+  mutate(datetime = as.POSIXct(timestamp %>% as.numeric() %>% unlist(), origin = "1970-01-01", tz = "UTC")) %>% 
+  select(value, datetime) %>% 
+  mutate(datetime=as.Date(datetime, format = "%m/%d/%Y"))
+
+save_object(object = "s3://crypto-data-shiny/FEAR AND GREED.csv", file = tempfile_15)
+old_fear_and_greed <- read.csv(tempfile_15)[,-1]
+
+f_data <- rbind(f_data %>% filter(datetime > max(old_fear_and_greed$datetime)), 
+                old_fear_and_greed)
+
+write.csv(f_data, "FEAR AND GREED.csv")
+
+if(file.exists('keys.R') == F){
+  put_object(file = "FEAR AND GREED.csv", 
+             object = "FEAR AND GREED.csv",
+             bucket = Sys.getenv("bucket_name"))
+}else{
+  put_object(file = "FEAR AND GREED.csv", 
+             object = "FEAR AND GREED.csv",
+             bucket = bucket_name)   
+}
+
+unlink("FEAR AND GREED.csv")
+  
 ################################################################
 # collect data from CryptoCompare API and update the data in AWS 
 
 cat("
       ***********************************
                  
-                  PART 4
+                  PART 5
                   
       ***********************************
       ")
@@ -413,7 +525,7 @@ if(wday(Sys.Date(), week_start = 1) == WEEK_DAY_FOR_UPDATE){
 cat("
       ***********************************
                  
-                  PART 5
+                  PART 6
                   
       ***********************************
       ")
@@ -575,11 +687,12 @@ cat("
   ## turn populate_list into a data frame and append to the old_coins data 
   cat("
       *******************************
-                PART 6 
+      
+                PART 7
+                
       *******************************
       
-      ")
-    
+      ") 
     
   # some clearing: there is no easy way to convert EUR and other real currencies to 
   # USD that is easy. So, I am willing to discard these data 
@@ -758,5 +871,6 @@ cat("
     
     unlink("all coins historical data.csv")
 }
+
 
   
