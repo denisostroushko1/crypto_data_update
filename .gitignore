@@ -7,3 +7,6 @@ tests.R
 /Data
 where to start.csv
 CoinGecko-GlobalCryptoMktCap.csv
+update by hand.R
+total-bitcoins.json
+available assets in API.csv

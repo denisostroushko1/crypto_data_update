@@ -367,13 +367,6 @@ cat("
       
     unlink(output_file)
     
-    save_object(object = "s3://crypto-data-shiny/ETH MC.csv", file = tempfile_15)
-    old_eth_mc <- read.csv(tempfile_15)[,-1]
-    
-    eth_mc <- 
-      rbind(old_eth_mc, 
-            eth_mc %>% filter(datetime > max(old_eth_mc$datetime))
-            )
     write.csv(eth_mc, "ETH MC.csv")
     
     if(file.exists('keys.R') == F){
