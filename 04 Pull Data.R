@@ -380,28 +380,6 @@ cat("
     }
     
     unlink("ETH MC.csv")
-
-## *************** ## 
-  if(file.exists("keys.R") == T){
-    
-    cat("
-        TOTAL MARKET CAP 
-        ")
-      
-    work_df <- read_csv("CoinGecko-GlobalCryptoMktCap.csv")
-    work_df <- work_df %>% 
-      mutate(timestamp = as.POSIXct((work_df$snapped_at %>% unlist())/1000, origin = "1970-01-01", tz = "UTC"), 
-             timestamp = as.Date(timestamp)) %>% 
-      select(-total_volume, -snapped_at) %>%
-      rename(price = market_cap)
-    
-    ## https://www.coingecko.com/en/global-charts
-    put_object(file = "CoinGecko-GlobalCryptoMktCap.csv", 
-               object = "TOTAL MC.csv",
-               bucket = bucket_name)   
-    
-  }
-    
     
 ## *************** ## 
     
