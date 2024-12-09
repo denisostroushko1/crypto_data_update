@@ -56,7 +56,7 @@ raw_btc_supply <-
 true_dates <- 
   data.frame(
     date = seq(from = min(raw_btc_supply$date), 
-               to = max(raw_btc_supply$date), 
+               to = as.Date(Sys.Date()), 
                by = "1 day")
   )
 
@@ -128,19 +128,22 @@ if(T == F){
 ## 
 total_3 <- 
   left_join(
-    x = work_df %>% rename(total_mc = price, date = timestamp), 
-    y = btc_mc, 
+    x =  btc_mc, 
+    y = work_df %>% rename(total_mc = price, date = timestamp), 
     by = "date"
   ) %>% 
-  left_join(
+  inner_join(
     df, 
     by = "date"
   ) %>% 
-  na.omit() %>% 
-  
+  mutate(total_mc = ifelse(is.na(total_mc), 0, total_mc),
+         btc_mc = ifelse(is.na(btc_mc), 0, btc_mc),
+         eth_mc = ifelse(is.na(eth_mc), 0, eth_mc)
+         ) %>% 
   mutate(
     price = total_mc - btc_mc - eth_mc
   ) %>% 
+  filter(price > 0) %>% 
   rename(datetime = date) %>% 
   select(datetime, price)
 
