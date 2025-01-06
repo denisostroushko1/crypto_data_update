@@ -132,7 +132,7 @@ total_3 <-
     y = work_df %>% rename(total_mc = price, date = timestamp), 
     by = "date"
   ) %>% 
-  inner_join(
+  left_join(
     df, 
     by = "date"
   ) %>% 
