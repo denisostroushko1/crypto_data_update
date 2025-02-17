@@ -709,6 +709,7 @@ cat("
         working_data %>% filter(symbol_from == curr) %>% select(symbol_to) %>% unique() %>% unlist() -> curr
         
         if(length(curr) > 1){curr <- curr[curr != 'USD']}
+        if(length(curr) > 1){curr <- curr[1]}
         
         iter_res <- c(iter_res, curr)
         
