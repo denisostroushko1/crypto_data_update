@@ -68,6 +68,9 @@ btc_supply <-
   ) %>% 
   mutate(supply = zoo::na.locf(supply))
 
+head(btc_supply)
+tail(btc_supply)
+
 tempfile_15 <- tempfile()
 save_object(object = "s3://crypto-data-shiny/all_available_BTC.csv", file = tempfile_15)
 df <- read.csv(tempfile_15)[,-1] %>% mutate(datetime = as.Date(datetime))
@@ -94,6 +97,9 @@ work_df <- work_df %>%
   select(-total_volume, -snapped_at) %>%
   rename(price = market_cap)
 
+head(work_df)
+tail(work_df)
+
 put_object(file = "CoinGecko-GlobalCryptoMktCap.csv", 
            object = "TOTAL MC.csv",
            bucket = bucket_name)   
@@ -108,6 +114,9 @@ df <-
   mutate(datetime = as.Date(datetime)) %>% 
   rename(date = datetime, 
          eth_mc = price)
+
+head(df)
+tail(df)
 
 if(T == F){
   
@@ -147,6 +156,9 @@ total_3 <-
   rename(datetime = date) %>% 
   select(datetime, price)
 
+head(total_3)
+tail(total_3)
+
 if(T == F){
   
   min(total_3$datetime)
@@ -159,8 +171,12 @@ if(T == F){
 
 ##############
 # SEND TO AWS 
+##############
 
 write.csv(total_3, "TOTAL3 MC.csv")
+
+head(total_3)
+tail(total_3)
 
 if(file.exists('keys.R') == F){
   put_object(file = "TOTAL3 MC.csv", 

@@ -700,13 +700,16 @@ cat("
     results <- vector(mode = "list", length = length(symbol_to_options))
     
     for(i in 1:length(symbol_to_options)){
-      
+    ##  print(i)
       curr = symbol_to_options[i]
       iter_res = c(curr)
       
       while(curr != "USD"){
         
         working_data %>% filter(symbol_from == curr) %>% select(symbol_to) %>% unique() %>% unlist() -> curr
+        
+        if(length(curr) > 1){curr <- curr[curr != 'USD']}
+        
         iter_res <- c(iter_res, curr)
         
       }
